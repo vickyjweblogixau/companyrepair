@@ -31,7 +31,7 @@ register_deactivation_hook( __FILE__, 'crs_deactivate' );
 
 function crs_activate() {
     // Register CPT + taxonomies first so rewrite rules exist
-    require_once CRS_PLUGIN_DIR . 'includes/class-crs-setup.php';
+    require_once CRS_PLUGIN_DIR . 'inc/class-crs-setup.php';
     CRS_Setup::register_cpt();
     CRS_Setup::register_taxonomies();
     CRS_Setup::create_roles();
@@ -56,15 +56,15 @@ add_action( 'plugins_loaded', 'crs_load_plugin' );
 
 function crs_load_plugin() {
     $includes = [
-        'includes/class-crs-setup.php',        // CPT, taxonomies, roles, DB
-        'includes/class-crs-acf-fields.php',   // ACF field groups (local)
-        'includes/class-crs-subscriptions.php',// Subscription CRUD + cron
-        'includes/class-crs-enquiries.php',    // Enquiry form + notifications
-        'includes/class-crs-dashboard.php',    // [crs_dashboard] shortcode
-        'includes/class-crs-wizard.php',       // [crs_register] onboarding wizard
-        'includes/class-crs-admin.php',        // WP Admin menu pages
-        'includes/class-crs-ajax.php',         // AJAX handlers
-        'includes/class-crs-rewrite.php',      // Custom rewrite rules
+        'inc/class-crs-setup.php',        // CPT, taxonomies, roles, DB
+        'inc/class-crs-acf-fields.php',   // ACF field groups (local)
+        'inc/class-crs-subscriptions.php',// Subscription CRUD + cron
+        'inc/class-crs-enquiries.php',    // Enquiry form + notifications
+        'inc/class-crs-dashboard.php',    // [crs_dashboard] shortcode
+        'inc/class-crs-wizard.php',       // [crs_register] onboarding wizard
+        'inc/class-crs-admin.php',        // WP Admin menu pages
+        'inc/class-crs-ajax.php',         // AJAX handlers
+        'inc/class-crs-rewrite.php',      // Custom rewrite rules
     ];
 
     foreach ( $includes as $file ) {
