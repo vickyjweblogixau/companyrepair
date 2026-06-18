@@ -1,0 +1,1345 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: WordPress Starter\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2020-02-04 13:32+0000\n"
+"PO-Revision-Date: 2026-06-03 06:56+0000\n"
+"Last-Translator: \n"
+"Language-Team: Spanish (Spain)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Loco https://localise.biz/\n"
+"Language: es_ES\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
+"X-Loco-Version: 2.8.4; wp-7.0-RC4; php-8.4.16"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:465
+msgid " Help organize the next one!"
+msgstr "¡Ayuda a organizar el próximo !"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:344
+#, php-format
+msgid ""
+"%s could not be located. Please try another nearby city. For example: Kansas "
+"City; Springfield; Portland."
+msgstr ""
+"No hemos podido localizar %s. Por favor, intenta con otra ciudad cercana. "
+"Por ejemplo: Madrid; Valencia; Zaragoza."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:58
+msgid ""
+"* To remove the SiteGround section from your WordPress admin you need to "
+"deactivate the SiteGround Central plugin."
+msgstr ""
+"* Para eliminar la sección de SiteGround de tu administrador de WordPress, "
+"necesitas desactivar el plugin SiteGround Central."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:283
+msgid ""
+"<b class=\"sg-with-color sg-with-color--color-warning\">Untested</b> with "
+"your version of WordPress"
+msgstr ""
+"<b class=\"sg-with-color sg-with-color--color-warning\">Sin probar</b> con "
+"tu versión de WordPress"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:287
+msgid "<b>Compatible</b> with your version of WordPress"
+msgstr "<b>Compatible</b> con tu versión de WordPress"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:285
+msgid "<b>Incompatible</b> with your version of WordPress"
+msgstr "<b>Incompatible</b> con tu versión de WordPress"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:377
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:409
+msgid "Action Required"
+msgstr "Acción requerida"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:29
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:36
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:49
+#| msgid "Active"
+msgid "ACTIVATE"
+msgstr "ACTIVO"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:55
+#: /chroot/plugins/wordpress-starter/react-strings.php:63
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:185
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:171
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:17
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:23
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:39
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:56
+msgid "Activate"
+msgstr "Activar"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:35
+msgid ""
+"Activate now and get <strong>50% off.</strong> Get peace of mind knowing "
+"that your website and domain are constantly monitored for malware, hacks, "
+"and data theft."
+msgstr ""
+"Activa ahora y obtén <strong>50% de descuento.</strong> Obtén tranquilidad "
+"sabiendo que tu sitio web y dominio son constantemente monitoreados por "
+"malware, hacks y robo de datos."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:9
+#: /chroot/plugins/wordpress-starter/react-strings.php:10
+#: /chroot/plugins/wordpress-starter/react-strings.php:56
+#: /chroot/plugins/wordpress-starter/react-strings.php:64
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:189
+msgid "Active"
+msgstr "Activo"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:5
+msgid "Add"
+msgstr "Agregar"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:48
+msgid "ADD MORE TOKENS"
+msgstr "AGREGAR MÁS TOKENS"
+
+#: /chroot/plugins/wordpress-starter/core/Pages/Custom_Page.php:117
+#: /chroot/plugins/wordpress-starter/core/Pages/Custom_Page.php:126
+msgid "Add new"
+msgstr "Añade nuevo"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:57
+msgid "Add Plugins"
+msgstr "Añadir plugins"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:68
+msgid "Add Themes"
+msgstr "Añadir temas"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:63
+msgid "Add Token"
+msgstr "Añadir token"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:6
+msgid "Added"
+msgstr "Agregado"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:174
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:182
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:44
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:51
+msgid "AI Agent for WordPress"
+msgstr "Agente de IA para WordPress"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:53
+msgid "AI Studio Banner"
+msgstr "Banner de AI Studio"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:35
+#: /chroot/plugins/wordpress-starter/react-strings.php:37
+#: /chroot/plugins/wordpress-starter/react-strings.php:39
+msgid "ALL"
+msgstr "TODO"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:7
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:8
+msgid "An unknown error occurred"
+msgstr "Ocurrió un error desconocido"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:27
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:28
+msgid "Art & Design"
+msgstr "Arte y diseño"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:50
+#| msgid "Attend an upcoming event near "
+msgid "Attend an upcoming event near %(city)s"
+msgstr "Asiste a un próximo evento"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Steps.php:291
+msgid "Attention required"
+msgstr "Atención requerida"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:16
+msgid ""
+"Bulletproof your website security in a few clicks against a range of "
+"security breaches, including brute-force attacks, malware threats and bots."
+msgstr ""
+"Asegura a prueba de balas la seguridad de tu sitio web en unos pocos clics "
+"contra una variedad de vulneraciones de seguridad, incluyendo ataques de "
+"fuerza bruta, amenazas de malware y bots."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:20
+msgid "Caching"
+msgstr "Caché"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:53
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:382
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:413
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:82
+#| msgid "Cancel"
+msgid "cancel"
+msgstr "cancelar"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:24
+msgid "CDN"
+msgstr "CDN"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:26
+msgid "CDN is not working."
+msgstr "El CDN no está funcionando."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:156
+msgid "Check out how your website looks!"
+msgstr "¡Comprueba cómo se ve tu sitio web!"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:109
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:130
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:114
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:136
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:72
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:94
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:60
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:82
+#| msgid "Check your website on it's domain."
+msgid "Check your website on its domain."
+msgstr "Revisa tu sitio web en su dominio."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:64
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:67
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:26
+msgid "Choose a fancy design for your website!"
+msgstr "¡Elige un diseño elegante para tu sitio web!"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:260
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:240
+msgid "Choose file"
+msgstr "Elige archivo"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:78
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:82
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:42
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:28
+msgid ""
+"Choose plugins for your WordPress site that enable the functionality you "
+"wish to have"
+msgstr ""
+"Elige los complementos para tu sitio WordPress que habiliten la "
+"funcionalidad que deseas tener"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:51
+msgid "City"
+msgstr "Ciudad"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:8
+#: /chroot/plugins/wordpress-starter/react-strings.php:44
+msgid "CLOSE"
+msgstr "CERRAR"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:21
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:126
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:132
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:90
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:78
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Steps.php:294
+msgid "Close"
+msgstr "Cerrar"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:89
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:94
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:54
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:40
+msgid "Complete"
+msgstr "Completar"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:62
+msgid "Confirm"
+msgstr "Confirmar"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:20
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:102
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:107
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:65
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:53
+msgid "Congrats! Your site is ready!"
+msgstr "¡Enhorabuena! ¡Tu web está lista!"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:50
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:72
+msgid "CONNECT"
+msgstr "CONECTAR"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:184
+msgid "CONNECT AGENT"
+msgstr ""
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:60
+msgid "Connection successful."
+msgstr "Conexión exitosa."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:62
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:75
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:65
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:79
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:24
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:39
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:25
+msgid "Continue"
+msgstr "Continuar"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:48
+msgid "Dashboard"
+msgstr "Área de Usuario"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:378
+msgid "Do you want to import the sample data when installing the theme?"
+msgstr "¿Quieres importar los datos de muestra al instalar el tema?"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:11
+msgid "Domain"
+msgstr "Dominio"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:165
+msgid "Edit and create new Pages"
+msgstr "Edita y crea nuevas páginas"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:73
+msgid "Email Marketing"
+msgstr "Marketing por correo electrónico"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:57
+msgid "Email Marketing Banner"
+msgstr "Banner de Email Marketing"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:67
+msgid ""
+"Email marketing is active. Start adding custom forms now to grow your "
+"audience."
+msgstr ""
+"El marketing por correo electrónico está activo. Comience a agregar "
+"formularios personalizados ahora para hacer crecer su audiencia."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:64
+msgid ""
+"Enable the connection to Email Marketing by pasting your secret connection "
+"token."
+msgstr ""
+"Habilita la conexión a Email Marketing pegando tu token de conexión secreto."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:31
+#: /chroot/plugins/wordpress-starter/react-strings.php:46
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:4
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:61
+msgid "Error"
+msgstr "Error"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:13
+msgid ""
+"Essential defenses are already active. Want even more protection? Add extra "
+"security layers here."
+msgstr ""
+"Las defensas esenciales ya están activas. ¿Quieres aún más protección? Añade "
+"capas de seguridad adicionales aquí."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:18
+msgid "EXIT"
+msgstr "Salir"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:19
+msgid "EXIT WIZARD"
+msgstr "Salir del asistente"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:74
+msgid "Expires"
+msgstr "Caduca"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:42
+msgid "External. Give it a better home."
+msgstr "Externo. Dale un mejor hogar."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:489
+msgid "Failed to connect to AI Studio. Please try again later."
+msgstr ""
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:32
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:33
+msgid "Fashion & Beauty"
+msgstr "Belleza y moda"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:70
+msgid ""
+"Find your secret connection token under Email Marketing dashboard > Connect "
+"Websites, then paste it here to connect."
+msgstr ""
+"Encuentra tu token de conexión secreta en el panel de Email Marketing > "
+"Conectar sitios web, luego pégalos aquí para conectar."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:28
+msgid "Free"
+msgstr "Gratis"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:28
+msgid ""
+"Get Essential features for <strong>free</strong> with your plan. Our "
+"powerful CDN caches your content across the world. This results in quicker "
+"load times and happier visitors."
+msgstr ""
+"Obtén características esenciales <strong>gratis</strong> con tu plan. "
+"Nuestro potente CDN almacena en caché tu contenido en todo el mundo. Esto "
+"resulta en tiempos de carga más rápidos y visitantes más felices."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:280
+msgid "Get the Latest Ebook"
+msgstr "Obtén el último Ebook"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:147
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:154
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:112
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:100
+msgid "Go To Dashboard"
+msgstr "Ir al Área de Usuario"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:114
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:135
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:119
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:141
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:77
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:99
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:65
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:87
+msgid "Go to WordPress admin to manage your content and more."
+msgstr "Ve al administrador de WordPress para administrar tu contenido y más."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:92
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:97
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:57
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:43
+msgid ""
+"Good thing about WordPress is that you can automate part of your marketing "
+"via plugins."
+msgstr ""
+"Lo bueno de WordPress es que puedes automatizar parte de tu marketing a "
+"través de plugins."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:54
+msgid "Grow With Easy Email Marketing"
+msgstr "Crecé con Easy Email Marketing"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:26
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:27
+msgid "Health & Fitness"
+msgstr "Salud y fitness"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:59
+msgid "Hello, "
+msgstr "Hola, "
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:10
+msgid "Hosting Plan"
+msgstr "Plan de Hosting"
+
+#. URI of the plugin
+msgid "https://siteground.com"
+msgstr "https://www.siteground.es"
+
+#. Author URI of the plugin
+msgid "https://www.siteground.com"
+msgstr "https://www.siteground.es"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:271
+msgid ""
+"If you have a how to question about WordPress it’s quite likely that we "
+"already have the answer for you in our Knowledge Base. It contains more than "
+"1000 helpful articles."
+msgstr ""
+"Si tienes una pregunta sobre WordPress, es muy probable que ya tengamos la "
+"respuesta en nuestra base de conocimientos. Contiene más de 1000 artículos "
+"útiles-"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:259
+msgid ""
+"If you have a plugin in a .zip format, you may install it by uploading it "
+"here."
+msgstr "Si tienes un plugin en formato .zip, puedes instalarlo subiéndolo aquí"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:239
+msgid ""
+"If you have a theme in a .zip format, you may install it by uploading it "
+"here."
+msgstr "Si tienes un tema en formato .zip, puedes instalarlo cargándolo aquí."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:121
+msgid "Important Notifications"
+msgstr "Notificaciones importantes"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:179
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:78
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:180
+msgid "Install"
+msgstr "Instalar"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:257
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:237
+msgid "Install Now"
+msgstr "Instalar ahora"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:16
+msgid "Installation in progress..."
+msgstr "Instalación en curso..."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:168
+msgid "Installed"
+msgstr "Instalado"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:15
+msgid "Installing, please don't close or refresh this page."
+msgstr "Instalando, por favor no cierres ni actualices esta página."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:11
+msgid "LATEST VERSION INSTALLED"
+msgstr "ÚLTIMA VERSIÓN INSTALADA"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:54
+#: /chroot/plugins/wordpress-starter/react-strings.php:62
+#| msgid " Learn more"
+msgid "Learn more"
+msgstr "Aprende más"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:48
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:50
+msgid "Let us build your website"
+msgstr "Vamos a construir tu sitio web"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:91
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:96
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:56
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:42
+msgid "Let's talk about marketing!"
+msgstr "¡Hablemos de marketing!"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:14
+#: /chroot/plugins/wordpress-starter/react-strings.php:73
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:175
+msgid "Live Preview"
+msgstr "Vista previa"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:66
+#: /chroot/plugins/wordpress-starter/react-strings.php:74
+msgid "Load More"
+msgstr "Cargar más"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:33
+msgid "Malware found."
+msgstr "Se encontró malware."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:38
+#| msgid "Manage"
+msgid "MANAGE"
+msgstr "ADMINISTRAR"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:219
+msgid "Manage"
+msgstr "Gestionar"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:69
+msgid "MANAGE CAMPAIGNS"
+msgstr "ADMINISTRAR CAMPAÑAS"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:68
+msgid "MANAGE FORMS"
+msgstr "ADMINISTRAR FORMULARIOS"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:204
+msgid "Manage Functionality"
+msgstr "Gestionar funcionalidad"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:164
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:166
+msgid "Manage Pages"
+msgstr "Gestionar páginas"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:21
+msgid "MANAGE PERFORMANCE"
+msgstr "GESTIONAR EL RENDIMIENTO"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:15
+msgid "MANAGE SECURITY"
+msgstr "GESTIONAR SEGURIDAD"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:113
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:134
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:118
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:140
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:76
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:98
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:64
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:86
+msgid "Manage site"
+msgstr "Administrar sitio"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:147
+msgid "Manage Your Website"
+msgstr "Administra tu sitio web"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:178
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:186
+#| msgid "News"
+msgid "NEW"
+msgstr "Noticias"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:381
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:412
+msgid "No"
+msgstr "No"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:379
+msgid "Note, that this will delete your existing content!"
+msgstr "¡Ten en cuenta que esto eliminará tu contenido existente!"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:38
+msgid "Online-store"
+msgstr ""
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:144
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:151
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:109
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:97
+msgid "Oops! Something went wrong!"
+msgstr "¡Ups! Algo salió mal!"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:176
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:47
+msgid "OPEN CHAT"
+msgstr "ABRIR CHAT"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:36
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:33
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:34
+msgid "Other"
+msgstr "Otro"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:49
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:51
+msgid ""
+"Our powerful AI tool builds your site and generates unique content, adapted "
+"to your project."
+msgstr ""
+"Nuestra potente herramienta de IA construye tu sitio y genera contenido "
+"único, adaptado a tu proyecto."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:286
+msgid ""
+"Our top experts have shared their know how on WooCommerce in а specialized "
+"ebook. Take advantage of their knowledge and make your site faster and safer."
+msgstr ""
+"Nuestros mejores expertos han compartido sus conocimientos sobre WooCommerce "
+"en un Ebook especializado. Aprovecha sus conocimientos y haz que tu sitio "
+"sea más rápido y seguro."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:279
+msgid ""
+"Our top experts have shared their know how on WordPress in specialized "
+"ebooks on different topics. Take advantage of their knowledge and make your "
+"site faster and safer."
+msgstr ""
+"Nuestros mejores expertos han compartido su conocimiento sobre WordPress en "
+"Ebooks especializados en diferentes temas. Aprovecha sus conocimientos y haz "
+"que tu sitio sea más rápido y seguro."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:256
+msgid ""
+"Our WooCommerce Starter allows you to choose a fancy design and add plugins "
+"with important functionality for your site. It installs and sets up all the "
+"items you chose."
+msgstr ""
+"Nuestro Starter de WooCommerce te permite elegir un diseño elegante y añadir "
+"plugins con una funcionalidad importante para tu sitio. Instala y configura "
+"todos los elementos que elijas."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:249
+msgid ""
+"Our WordPress Starter allows you to choose a fancy design and add plugins "
+"with important functionality for your site. It installs and sets up all the "
+"items you chose."
+msgstr ""
+"Nuestro WordPress Starter te permite elegir un diseño elegante y añadir "
+"plugins con funciones importantes para tu sitio. Instala y configura todos "
+"los elementos que elijas."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:81
+msgid "PARTNER PERKS"
+msgstr "VENTAJAS PARA SOCIOS"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:28
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:29
+msgid "Photography"
+msgstr "Fotografía"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:9
+msgid "Plugin activated successfully."
+msgstr "Plugin activado con éxito."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:29
+msgid "plugin by Automattic"
+msgstr "plugin de Automattic"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:79
+msgid "Power Tools"
+msgstr "Herramientas eléctricas"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:24
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:43
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:63
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:76
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:90
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:25
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:45
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:66
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:80
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:95
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:25
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:40
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:55
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:26
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:41
+msgid "Previous Step"
+msgstr "Paso anterior"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:23
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:40
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:24
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:42
+msgid "Proceed"
+msgstr "Proceder"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:285
+msgid "Read our WooCommerce ebooks"
+msgstr "Lee nuestros Ebooks de WooCommerce"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:278
+msgid "Read our WordPress ebooks"
+msgstr "Lee nuestros ebooks de WordPress"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:4
+msgid "Recommended"
+msgstr "Recomendado"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:77
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:81
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:41
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:27
+msgid "Recommended useful functionality for your site!"
+msgstr "¡Funcionalidad útil recomendada para tu sitio web!"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:85
+msgid "remaining"
+msgstr "restante"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Steps.php:295
+msgid "Remove WooCommerce"
+msgstr "Quitar WooCommerce"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:46
+msgid "Resets on"
+msgstr "Restablecer en"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:146
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:153
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:111
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:99
+msgid "Restart Installation"
+msgstr "Reiniciar la instalación"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:29
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:30
+msgid "Restaurant"
+msgstr "Restaurante"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:83
+msgid "save"
+msgstr "guardar"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:59
+#: /chroot/plugins/wordpress-starter/react-strings.php:61
+#: /chroot/plugins/wordpress-starter/react-strings.php:70
+#: /chroot/plugins/wordpress-starter/react-strings.php:72
+msgid "Search"
+msgstr "Buscar"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:58
+#: /chroot/plugins/wordpress-starter/react-strings.php:69
+msgid "Search By"
+msgstr "Buscar por"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:60
+msgid "Search plugins..."
+msgstr "Buscar plugins..."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:71
+msgid "Search themes..."
+msgstr "Buscar temas..."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:65
+msgid "Secret Connection Token"
+msgstr "Token de conexión secreta"
+
+#: /chroot/plugins/wordpress-starter/core/Installer/Installer.php:138
+#: /chroot/plugins/wordpress-starter/core/Installer/Installer.php:169
+#: /chroot/plugins/wordpress-starter/core/Installer/Installer.php:199
+msgid "Security check"
+msgstr "Control de seguridad"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:12
+msgid "Security Optimizer by SiteGround"
+msgstr "Optimizador de seguridad por SiteGround"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:45
+msgid "SELECT"
+msgstr "SELECCIONAR"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:34
+msgid "Select"
+msgstr "Seleccionar"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:41
+#: /chroot/plugins/wordpress-starter/react-strings.php:43
+msgid "select"
+msgstr "seleccionar"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:100
+msgid ""
+"Select design, functionality and marketing plugins and start working on your "
+"online store right away!"
+msgstr ""
+"Selecciona el diseño, la funcionalidad y los plugins de marketing y empieza "
+"a trabajar en tu tienda online de inmediato."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:92
+msgid ""
+"Select design, functionality and marketing plugins and start working on your "
+"site right away!"
+msgstr ""
+"Selecciona el diseño, la funcionalidad y los plugins de marketing y empieza "
+"a trabajar en tu sitio de inmediato."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:40
+#: /chroot/plugins/wordpress-starter/react-strings.php:42
+msgid "selected"
+msgstr "seleccionado"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:27
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:34
+msgid "SETTINGS"
+msgstr "AJUSTES"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:175
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:183
+msgid "Simplify how you manage your site with AI."
+msgstr ""
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:71
+msgid "Site is not connected"
+msgstr "El sitio no está conectado"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:31
+msgid "Site Scanner"
+msgstr "Escáner del sitio"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:14
+msgid "Site Security"
+msgstr "Seguridad del sitio"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:76
+msgid "Site Tools"
+msgstr "Herramientas del sitio"
+
+#. Author of the plugin
+msgid "SiteGround"
+msgstr "SiteGround"
+
+#. Name of the plugin
+msgid "SiteGround Central"
+msgstr "SiteGround Central"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:78
+msgid "SiteGround Essentials"
+msgstr "Fundamentos de SiteGround"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:80
+msgid "SITEGROUND TOOLS"
+msgstr "HERRAMIENTAS SITEGROUND"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:12
+#: /chroot/plugins/wordpress-starter/react-strings.php:13
+#: /chroot/plugins/wordpress-starter/react-strings.php:24
+#: /chroot/plugins/wordpress-starter/react-strings.php:25
+msgid "Sorry, could not install theme"
+msgstr "Lo siento, no se pudo instalar el tema"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:30
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:6
+msgid "Sorry, there was an unexpected problem."
+msgstr "Lo siento, hubo un problema inesperado."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:18
+msgid "Speed Optimizer by SiteGround"
+msgstr "Optimizador de velocidad por SiteGround"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:93
+msgid "START NOW"
+msgstr "Comienza ahora"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:12
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:12
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:12
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:12
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:250
+msgid "Start Now"
+msgstr "Empezar ahora"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:55
+msgid ""
+"Stop letting your visitors walk away. Every person who visits your site is a "
+"potential customer—don't lose them. Activate the SiteGround Email Marketing "
+"plugin to start capturing leads instantly."
+msgstr ""
+"Deja de permitir que tus visitantes se vayan. Cada persona que visita tu "
+"sitio es un cliente potencial, no los pierdas. Activa el plugin de Email "
+"Marketing de SiteGround para empezar a capturar leads al instante."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:52
+msgid "Submit"
+msgstr "Enviar"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:32
+#: /chroot/plugins/wordpress-starter/react-strings.php:47
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:5
+msgid "Success"
+msgstr "Éxito"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:498
+msgid "Successfully connected to AI Studio."
+msgstr ""
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:41
+msgid "Swap for a custom domain."
+msgstr "Cambia por un dominio personalizado."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:40
+msgid "System. Make it official."
+msgstr "Sistema. Hazlo oficial."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:262
+msgid "Take Advantage of our WordPress tutorials!"
+msgstr "¡Aprovecha nuestros tutoriales de WordPress!"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:410
+msgid ""
+"The design you have chosen comes with sample data that is enabled by "
+"WooCommerce plugin. Do you want to install WooCommerce on your site?"
+msgstr ""
+"El diseño que has elegido viene con datos de muestra habilitados por el "
+"plugin WooCommerce. ¿Quieres instalar WooCommerce en tu sitio?"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Steps.php:292
+msgid ""
+"The design you have chosen comes with sample data that is enabled by "
+"WooCommerce. In order to keep the sample data, including all the pages and "
+"overall look and structure of the selected design, you need to install "
+"WooCommerce on your site."
+msgstr ""
+"El diseño que has elegido viene con datos de muestra habilitados por "
+"WooCommerce. Para mantener los datos de muestra, incluidas todas las páginas "
+"y el aspecto general y la estructura del diseño seleccionado, debes instalar "
+"WooCommerce en tu sitio."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:123
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:129
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:87
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:75
+msgid "The installation is not completed"
+msgstr "La instalación no está completada"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:145
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:152
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:110
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:98
+msgid ""
+"The installation of the selected items could not be completed. Please "
+"restart the wizard or try again later"
+msgstr ""
+"No se pudo completar la instalación de los elementos seleccionados. Reinicia "
+"el asistente o inténtalo de nuevo más tarde."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:52
+msgid ""
+"The SiteGround AI Agent simplifies website management by acting as a 24/7 "
+"expert assistant that uses natural language to create content, update "
+"plugins, manage WooCommerce products, and more."
+msgstr ""
+"El Agente de IA de SiteGround simplifica la gestión de sitios web actuando "
+"como un asistente experto disponible las 24 horas que utiliza lenguaje "
+"natural para crear contenido, actualizar plugins, gestionar productos de "
+"WooCommerce y más."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:22
+msgid ""
+"The Speed Optimizer plugin is a free WordPress performance-boosting solution "
+"to improve user experience, increase conversion rates and drive more traffic."
+msgstr ""
+"El plugin Speed Optimizer es una solución gratuita de WordPress para mejorar "
+"el rendimiento, mejorar la experiencia del usuario, aumentar las tasas de "
+"conversión y atraer más tráfico."
+
+#: /chroot/plugins/wordpress-starter/core/Activator/Activator.php:24
+msgid "The WordPress Starter plugin requires PHP version 5.6 or above."
+msgstr "El plugin WordPress Starter requiere la versión de PHP 5.6 o superior."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:33
+msgid "Theme search"
+msgstr "Búsqueda de tema"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:123
+msgid ""
+"There are new updates for your website. Check them out and apply the new "
+"versions to keep your site updated and secure!"
+msgstr ""
+"Hay nuevas actualizaciones para tu sitio web. ¡Échales un vistazo y aplica "
+"las nuevas versiones para mantener tu sitio actualizado y seguro!"
+
+#. 1: The city the user searched for, 2: Meetup organization documentation URL.
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:356
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:453
+#, php-format
+msgid ""
+"There are no events scheduled near %1$s at the moment. Would you like to <a "
+"href=\"%2$s\">organize a WordPress event</a>?"
+msgstr ""
+"En este momento no hay ningún evento programado cerca de %1$s. ¿Te gustaría "
+"<a href=\"%2$s\">organizar un evento WordPress</a>?"
+
+#. Description of the plugin
+msgid ""
+"This plugin is designed to provide you with an easy start of your next "
+"WordPress project!"
+msgstr ""
+"¡Este plugin está diseñado para proporcionarte un comienzo fácil de tu "
+"próximo proyecto WordPress!"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:66
+msgid "Token can not be empty."
+msgstr "El token no puede estar vacío."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:45
+msgid "tokens"
+msgstr "tokens"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:43
+msgid "Transfer your domain today."
+msgstr "Transfiere tu dominio hoy."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:31
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:32
+msgid "Travel"
+msgstr "Viajar"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:125
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:131
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:89
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:77
+msgid "Try again"
+msgstr "Inténtalo de nuevo"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:174
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:124
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:152
+msgid "Update"
+msgstr "Actualizar"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Plugins.php:258
+msgid "Upload Your Plugin"
+msgstr "Sube tu plugin"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Themes.php:238
+msgid "Upload Your Theme"
+msgstr "Sube tu tema"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:53
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:55
+msgid "Use a standard WordPress theme"
+msgstr "Usa un tema estándar de WordPress"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:255
+msgid "Use our WooCommerce starter for an easier start!"
+msgstr "¡Usa nuestro iniciador de WooCommerce para un comienzo más fácil!"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:248
+msgid "Use our WordPress starter for an easier start!"
+msgstr "¡Usa nuestro Starter de WordPress para un comienzo más fácil!"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:84
+msgid "used"
+msgstr "utilizado"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:238
+msgid "Useful Links"
+msgstr "Links útiles"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:75
+msgid "View details in"
+msgstr "Ver detalles en"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:22
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:108
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:129
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:113
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:135
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:71
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:93
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:59
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:81
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:155
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:157
+msgid "View Site"
+msgstr "Ver página"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:264
+msgid "View WordPress Tutorial"
+msgstr "Ver tutorial de WordPress"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:272
+msgid "Visit Knowledge Base"
+msgstr "Visitar la base de conocimientos"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:270
+#| msgid "Visit out WordPress knowledge base!"
+msgid "Visit our WordPress knowledge base!"
+msgstr "Visitar la base de conocimientos de WordPress!"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:464
+msgid "Want more events?"
+msgstr "¿Quieres más eventos?"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:124
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:130
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:88
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:76
+msgid "We could not complete the installations."
+msgstr "No pudimos completar las instalaciones."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:124
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:130
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:88
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:76
+msgid "We could not complete the installations. Try again later."
+msgstr "No pudimos completar las instalaciones. Inténtalo de nuevo más tarde."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:65
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:68
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:27
+msgid ""
+"We have gathered some of the best free and paid themes suitable for various "
+"personal and business projects to help your site look professional and "
+"awesome."
+msgstr ""
+"Hemos reunido algunos de los mejores temas gratuitos y de pago adecuados "
+"para varios proyectos personales y de negocios para ayudarte a que tu sitio "
+"se vea profesional e impresionante."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:263
+msgid ""
+"We have prepared an easy to follow tutorials with everything you need to "
+"know about setting up your WordPress site, creating posts and pages, making "
+"backups and a lot more."
+msgstr ""
+"Hemos preparado tutoriales fáciles de seguir con todo lo que necesitas saber "
+"sobre cómo configurar tu sitio WordPress, crear publicaciones y páginas, "
+"hacer copias de seguridad y mucho más."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:23
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:103
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:108
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:66
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:54
+msgid ""
+"We have successfully completed the installation of the items you selected. "
+"You may now proceed to your WordPress dashboard and start managing your site."
+msgstr ""
+"Hemos completado con éxito la instalación de los elementos que has "
+"seleccionado. Puedes proceder al panel de control en tu WordPress y empezar "
+"a gestionar tu web."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:14
+#| msgid ""
+#| "We know that learning WordPress and Woocommerce takes time. To give you a "
+#| "jump start, we have prepared a quick customization wizard that will "
+#| "assist you in choosing design and adding functionality to your site in a "
+#| "few easy steps."
+msgid ""
+"We know that learning WordPress and WooCommerce takes time. To give you a "
+"jump start, we have prepared a quick customization wizard that will assist "
+"you in choosing design and adding functionality to your site in a few easy "
+"steps."
+msgstr ""
+"Sabemos que aprender a utilizar WordPress y WooCommerce lleva tiempo. Para "
+"ayudarte, hemos preparado un asistente para elegir el diseño y añadir "
+"funcionalidades a tu web en unos sencillos pasos."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:14
+msgid ""
+"We know that learning WordPress takes time. To give you a jump start, we "
+"have prepared a quick customization wizard that will assist you in adding "
+"functionality to your site in a few easy steps."
+msgstr ""
+"Sabemos que aprender a utilizar WordPress lleva tiempo. Para ayudarte a "
+"crear una web de inmediato, hemos preparado un  asistente rápido y "
+"personalizado que te ayudará a agregar funcionalidades a tu sitio web en "
+"unos rápidos y sencillos pasos."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:14
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:14
+msgid ""
+"We know that learning WordPress takes time. To give you a jump start, we "
+"have prepared a quick customization wizard that will assist you in choosing "
+"design and adding functionality to your site in a few easy steps."
+msgstr ""
+"Sabemos que aprender WordPress lleva tiempo. Para ayudarte con un buen "
+"comienzo, hemos preparado un rápido asistente de personalización que te "
+"ayudará a elegir el diseño y agregar funcionalidades a tu sitio web en unos "
+"sencillos pasos."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:30
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:31
+msgid "Wedding"
+msgstr "Boda"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/WooWizard.php:11
+#| msgid "Welcome to Your Woocommerce Site!"
+msgid "Welcome to Your WooCommerce Site!"
+msgstr "¡Bienvenida/o a tu web con WooCommerce!"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:11
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:11
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/EddWizard.php:11
+msgid "Welcome to Your WordPress Site!"
+msgstr "¡Bienvenido a tu sitio WordPress!"
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:21
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:22
+msgid "What is your website topic?"
+msgstr "¿Cuál es el tema de tu sitio web?"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:26
+msgid "WooCommerce"
+msgstr "WooCommerce"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:27
+msgid ""
+"WooCommerce empowers millions of shops and is full of features that allow "
+"you to manage diverse products."
+msgstr ""
+"WooCommerce potencia millones de tiendas y está repleto de funciones que te "
+"permiten administrar diversos productos."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:99
+msgid "WooCommerce Starter Available!"
+msgstr "¡Starter de WooCommerce disponible!"
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:77
+msgid "WordPress Assistance"
+msgstr "Asistencia de WordPress"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:304
+msgid "WordPress Events"
+msgstr ""
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:17
+#: /chroot/plugins/wordpress-starter/templates/wizard_template.php:14
+msgid "WordPress Starter"
+msgstr "WordPress Starter"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:91
+msgid "WordPress Starter Available!"
+msgstr "¡Starter de WordPress disponible!"
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:380
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Install.php:411
+msgid "Yes"
+msgstr "Si"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:49
+msgid "you"
+msgstr "usted"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:65
+msgid ""
+"You are updating a plugin. Be sure to back up your database and files first."
+msgstr ""
+"Estás actualizando un complemento. Asegúrese de hacer una copia de seguridad "
+"de su base de datos y archivos primero."
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:67
+msgid ""
+"You are updating a theme. Be sure to back up your database and files first."
+msgstr ""
+"Estás actualizando un tema. Asegúrese de hacer una copia de seguridad de su "
+"base de datos y archivos primero."
+
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/AIWizard.php:54
+#: /chroot/plugins/wordpress-starter/core/Wizard/config/DefaultWizard.php:56
+msgid ""
+"You can choose a WordPress theme from more than 30 professional templates in "
+"our free gallery."
+msgstr ""
+"Puedes elegir un tema de WordPress entre más de 30 plantillas profesionales "
+"en nuestra galería gratuita."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:19
+msgid ""
+"You're off to a fast start with core caching. Boost your speed even further "
+"by activating more features."
+msgstr ""
+"Con el almacenamiento en caché básico, ya tienes un buen comienzo. Aumenta "
+"aún más la velocidad activando más funciones."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:25
+msgid "Your site is now cached through our CDN servers."
+msgstr ""
+"Tu sitio ahora está en caché a través de nuestros servidores CDN. Actualiza "
+"a Premium desde tu Área de Cliente para habilitar funciones avanzadas, "
+"incluyendo el “modo Bajo Ataque”."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:30
+#| msgid ""
+#| "Your site is now cached through our CDN servers. Upgrade to Premium from "
+#| "your Client Area to enable advanced features, including \\\"Under Attack "
+#| "mode\\\"."
+msgid ""
+"Your site is now cached through our CDN servers. Upgrade to Premium to "
+"enable advanced features, including \\\"Under Attack mode\\\"."
+msgstr ""
+"Tu sitio ahora está en caché a través de nuestros servidores CDN. Actualiza "
+"a Premium para habilitar funciones avanzadas, incluyendo el “modo Bajo "
+"Ataque”."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:32
+msgid "Your site is now monitored by our Site Scanner service."
+msgstr "Su sitio ahora es monitoreado por nuestro servicio Site Scanner."
+
+#: /chroot/plugins/wordpress-starter/vendor/siteground/siteground-dashboard-notifications/assets/react-strings.php:37
+msgid ""
+"Your site is now monitored by our Site Scanner service. Upgrade to Premium "
+"to enable additional features, including advanced scans, quarantine, and "
+"cleanup."
+msgstr ""
+"Su sitio ahora está monitorizado por nuestro servicio de Site Scanner. "
+"Actualice a Premium para habilitar características adicionales, incluyendo "
+"análisis avanzados, cuarentena y limpieza."
+
+#: /chroot/plugins/wordpress-starter/core/Rest/Controllers/V1/Rest_Dashboard.php:122
+msgid "Your WordPress needs attention!"
+msgstr "¡Tu WordPress necesita atención!"
+
+#: /chroot/plugins/wordpress-starter/react-strings.php:7
+msgid "{{free}}Free{{/free}} plugin {{by}}by %(author)s{{/by}}"
+msgstr "Plugin {{free}}gratuito{{/free}} {{by}}de %(author)s{{/by}}"

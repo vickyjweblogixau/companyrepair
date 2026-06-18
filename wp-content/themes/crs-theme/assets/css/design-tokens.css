@@ -1,0 +1,202 @@
+/**
+ * CRS Theme — Design Tokens Reference
+ * =====================================
+ * This file documents the full CRS design system.
+ * Import this into any prototyping tool (Figma tokens, Storybook, etc.)
+ * or reference it during development.
+ *
+ * The canonical source is the :root block in style.css.
+ */
+
+/* ==========================================================================
+   COLOUR PALETTE
+   ========================================================================== */
+
+/*
+   ┌─────────────────────────────────────────────────────────────────────────┐
+   │  Token Name         │  CSS Variable         │  Hex       │  Usage       │
+   ├─────────────────────────────────────────────────────────────────────────┤
+   │  Navy (Primary)     │  --crs-navy            │  #0a2647   │  Hero bg,    │
+   │                     │                        │            │  footer icon │
+   │  Navy Dark          │  --crs-navy-2          │  #0c2d5a   │  CTA bg      │
+   │  Blue (CTA)         │  --crs-blue            │  #1565d8   │  Buttons,    │
+   │                     │                        │            │  links,      │
+   │                     │                        │            │  active tabs │
+   │  Blue Dark (hover)  │  --crs-blue-dark       │  #0d4fb8   │  Button      │
+   │                     │                        │            │  hover       │
+   │  Light Blue         │  --crs-light-blue      │  #eaf1fc   │  Subtle bg,  │
+   │                     │                        │            │  trust bar   │
+   │  Ink (Text)         │  --crs-ink             │  #1b2430   │  Body copy   │
+   │  Muted (Secondary)  │  --crs-muted           │  #6b7785   │  Sub-text,   │
+   │                     │                        │            │  placeholders│
+   │  Line (Border)      │  --crs-line            │  #e7ecf3   │  Card        │
+   │                     │                        │            │  borders,    │
+   │                     │                        │            │  dividers    │
+   │  Green (Trust)      │  --crs-green           │  #1f9d57   │  Checkmarks, │
+   │                     │                        │            │  verified    │
+   │  Background         │  --crs-bg              │  #ffffff   │  Page bg     │
+   │  Section BG         │  --crs-section-bg      │  #f6f8fc   │  Inner pages │
+   │  Star / Rating      │  --crs-star            │  #f5a623   │  Stars       │
+   └─────────────────────────────────────────────────────────────────────────┘
+*/
+
+:root {
+    /* Colours */
+    --crs-navy:        #0a2647;
+    --crs-navy-2:      #0c2d5a;
+    --crs-blue:        #1565d8;
+    --crs-blue-dark:   #0d4fb8;
+    --crs-light-blue:  #eaf1fc;
+    --crs-ink:         #1b2430;
+    --crs-muted:       #6b7785;
+    --crs-line:        #e7ecf3;
+    --crs-green:       #1f9d57;
+    --crs-bg:          #ffffff;
+    --crs-section-bg:  #f6f8fc;
+    --crs-star:        #f5a623;
+
+    /* Typography */
+    --crs-font:        'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --crs-font-size-base: 15px;
+
+    /* Border Radius */
+    --crs-radius-sm:   9px;
+    --crs-radius:      14px;
+    --crs-radius-lg:   16px;
+
+    /* Shadows */
+    --crs-shadow-sm:   0 3px 8px rgba(13, 79, 184, .12);
+    --crs-shadow:      0 10px 24px rgba(161, 161, 161, .12);
+    --crs-shadow-lg:   0 15px 35px rgba(0, 0, 0, .15);
+    --crs-shadow-blue: 0 12px 26px rgba(10, 38, 71, .10);
+}
+
+
+/* ==========================================================================
+   TYPOGRAPHY SCALE
+   ========================================================================== */
+
+/*
+   Font Family:  Poppins (Google Fonts)
+   Weights used: 400 (regular), 500 (medium), 600 (semibold), 700 (bold), 800 (extrabold)
+
+   ┌─────────────────────────────────────────────────────┐
+   │  Usage               │  Size          │  Weight      │
+   ├─────────────────────────────────────────────────────┤
+   │  Hero H1             │  45px          │  700         │
+   │  Section Title (H1)  │  clamp(24,3vw,32px) │ 800   │
+   │  Section Title (H2)  │  20–24px       │  700         │
+   │  Card Heading        │  17–19px       │  700         │
+   │  Business Name       │  16px          │  700         │
+   │  Body                │  15px          │  400         │
+   │  Card Label          │  14px          │  600         │
+   │  Subtext / Muted     │  13–13.5px     │  400–500     │
+   │  Badge / Tag         │  11–12px       │  600–700     │
+   └─────────────────────────────────────────────────────┘
+*/
+
+
+/* ==========================================================================
+   COMPONENT INVENTORY
+   ========================================================================== */
+
+/*
+   GLOBAL COMPONENTS
+   ─────────────────
+   .crs-topbar           Header bar with logo + marquee tagline
+   .crs-marquee          Auto-scrolling tagline strip
+   .crs-hero             Full-width navy gradient hero with search form
+   .crs-trust            Light-blue trust bar row (4 trust signals)
+   .crs-panel            White card with border + radius (16px)
+   .crs-sec-title        Section heading (H2)
+   .crs-sec-sub          Section subheading
+   .crs-viewall          "View all →" link
+   .crs-cta-banner       Dark navy full-width CTA strip
+   .crs-footer           White footer with link columns + CTA cards
+
+   BUTTONS
+   ───────
+   .btn-crs              Primary blue filled button (generic)
+   .btn-cta              White outlined button with arrow (footer CTAs)
+   .btn-cta-request      Blue filled button (CTA banner)
+   .btn-visit            Light-blue outlined → blue hover (sponsor cards)
+
+   SERVICE / BROWSE GRID
+   ─────────────────────
+   .svc-card             Service icon card (150px height, border, shadow)
+   .chip                 Brand / OS chip card (72px min-height)
+
+   HOMEPAGE SECTIONS
+   ─────────────────
+   .sponsor-card         Sponsored / partner listing card (homepage)
+   .article-card         Blog article card (Swiper carousel)
+   .blog-nav-btn         Swiper prev/next buttons (circle, 42px)
+
+   SERVICE LISTING PAGE  (sp- prefix)
+   ────────────────────
+   .sp-breadcrumb        Breadcrumb trail
+   .sp-title             Page H1
+   .sp-sub               Page subtitle
+   .sp-count             "N businesses found"
+   .sp-search            Search/filter bar
+   .sp-feat              Featured business card (top 4, premium/featured tier)
+   .sp-row               Standard listing row card
+   .sp-thumb             Thumbnail within sp-row (92×78px)
+   .sp-badges            Onsite / Remote / Pickup badges strip
+   .sp-btn-profile       "View Profile" outline button
+   .sp-btn-enquiry       "Enquiry Now" filled button
+   .sp-side              Sidebar box (white card, 20px padding)
+   .sp-pagination        Paginator
+
+   BUSINESS PROFILE PAGE  (bp- prefix)
+   ─────────────────────
+   .bp-breadcrumb        Breadcrumb trail
+   .bp-card              Content card (white, 22px padding)
+   .bp-logo              Business logo wrapper (bordered, auto size)
+   .bp-name              Business name H1
+   .bp-rating            Stars + score + review count row
+   .bp-trust             Trust badges strip (verified, top rated, years)
+   .bp-actions           Button row (call, enquiry, website, directions)
+   .bp-gallery           4-up image grid
+   .bp-h                 Section subheading within profile
+   .bp-list              Icon + text list (services, brands, OS, options)
+   .bp-collist           2-column variant of bp-list
+   .bp-review            Individual review block
+   .bp-contact           Contact info list (icon + text/link)
+   .bp-hours             Opening hours table
+   .bp-quote             Dark navy quote/enquiry sidebar card
+   .bp-sticky            Sticky sidebar wrapper
+*/
+
+
+/* ==========================================================================
+   SUBSCRIPTION TIER → DISPLAY RULES
+   ========================================================================== */
+
+/*
+   Tier       │ sp-feat card │ sp-row logo │ Enquiry btn │ Email visible │ Gallery
+   ───────────┼──────────────┼─────────────┼─────────────┼───────────────┼────────
+   basic      │ ✗            │ ✗           │ ✗           │ ✗             │ ✗
+   standard   │ ✗            │ ✓           │ ✓           │ ✗             │ ✗ (4)
+   featured   │ ✓ (state/region only) │ ✓ │ ✓          │ ✗             │ ✓ (4)
+   premium    │ ✓ (all levels)  │ ✓        │ ✓           │ ✓             │ ✓ (4+priority)
+*/
+
+
+/* ==========================================================================
+   TEMPLATE → FILE MAP
+   ========================================================================== */
+
+/*
+   HTML Prototype       →  WP Template File          →  URL Pattern
+   ───────────────────────────────────────────────────────────────────────────
+   index.html           →  front-page.php            →  /
+   service.html         →  archive-business.php       →  /services/{service}/
+   state.html           →  taxonomy-au-state.php      →  /services/{svc}/{state}/
+   region.html          →  taxonomy-au-suburb.php     →  /services/{svc}/{state}/{region}/
+   single-page.html     →  single-business.php        →  /business/{slug}/
+   (new)                →  page-dashboard.php         →  /dashboard/
+   (new)                →  page-register.php          →  /list-your-business/
+   (new)                →  taxonomy-device-brand.php  →  /brand/{brand}/
+   (new)                →  taxonomy-operating-system.php → /os/{os}/
+*/

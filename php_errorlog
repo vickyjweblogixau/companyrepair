@@ -1,0 +1,3 @@
+[18-Jun-2026 07:38:07 UTC] wp_auto_login: trying to login user_id==1 loginusername=adminrepairservices to admin_url=https://computerrepairservices.com.au/wp-admin/?sg_auto=1
+[18-Jun-2026 09:32:22 UTC] wp_auto_login: trying to login user_id==1 loginusername=adminrepairservices to admin_url=https://computerrepairservices.com.au/wp-admin/?sg_auto=1
+[18-Jun-2026 09:42:43 UTC] Cron reschedule event error for hook: action_scheduler_run_queue, Error code: invalid_schedule, Error message: Event schedule does not exist., Data: {"schedule":"every_minute","args":["WP Cron"],"interval":60}
