@@ -25,7 +25,7 @@ class CRS_Setup {
             'labels' => [
                 'name'               => __( 'Businesses',              'crs' ),
                 'singular_name'      => __( 'Business',               'crs' ),
-                'menu_name'          => __( 'Businesses',             'crs' ),
+                'menu_name'          => __( 'CRS Taxonomy',            'crs' ),
                 'add_new'            => __( 'Add New',                'crs' ),
                 'add_new_item'       => __( 'Add New Business',       'crs' ),
                 'edit_item'          => __( 'Edit Business',          'crs' ),
@@ -211,15 +211,16 @@ class CRS_Setup {
                 'managed-it-services' => 'Managed IT Services',
                 'remote-it-support'   => 'Remote IT Support',
             ],
+            // au-state slugs now use the full name; abbreviation stored as term meta
             'au-state' => [
-                'vic' => 'Victoria',
-                'nsw' => 'New South Wales',
-                'qld' => 'Queensland',
-                'wa'  => 'Western Australia',
-                'sa'  => 'South Australia',
-                'tas' => 'Tasmania',
-                'act' => 'Australian Capital Territory',
-                'nt'  => 'Northern Territory',
+                'victoria'                      => 'Victoria',
+                'new-south-wales'               => 'New South Wales',
+                'queensland'                    => 'Queensland',
+                'western-australia'             => 'Western Australia',
+                'south-australia'               => 'South Australia',
+                'tasmania'                      => 'Tasmania',
+                'australian-capital-territory'  => 'Australian Capital Territory',
+                'northern-territory'            => 'Northern Territory',
             ],
             'device-brand' => [
                 'apple'   => 'Apple',   'dell'    => 'Dell',
@@ -234,13 +235,58 @@ class CRS_Setup {
             ],
         ];
 
+        // Abbreviations for au-state terms (keyed by slug)
+        $state_abbrs = [
+            'victoria'                     => 'VIC',
+            'new-south-wales'              => 'NSW',
+            'queensland'                   => 'QLD',
+            'western-australia'            => 'WA',
+            'south-australia'              => 'SA',
+            'tasmania'                     => 'TAS',
+            'australian-capital-territory' => 'ACT',
+            'northern-territory'           => 'NT',
+        ];
+
         foreach ( $data as $taxonomy => $terms ) {
             foreach ( $terms as $slug => $name ) {
                 if ( ! term_exists( $slug, $taxonomy ) ) {
-                    wp_insert_term( $name, $taxonomy, [ 'slug' => $slug ] );
+                    $result = wp_insert_term( $name, $taxonomy, [ 'slug' => $slug ] );
+                    if ( ! is_wp_error( $result ) && $taxonomy === 'au-state' && isset( $state_abbrs[ $slug ] ) ) {
+                        update_term_meta( $result['term_id'], 'au_state_abbreviation', $state_abbrs[ $slug ] );
+                    }
                 }
             }
         }
+    }
+
+    /* ====================================================================
+       6.  Migrate existing au-state terms to full-name slugs
+       ================================================================== */
+    public static function migrate_state_slugs() {
+        if ( get_option( 'crs_state_slugs_v2' ) ) {
+            return; // Already migrated
+        }
+
+        $migrations = [
+            'vic' => [ 'slug' => 'victoria',                     'abbr' => 'VIC' ],
+            'nsw' => [ 'slug' => 'new-south-wales',               'abbr' => 'NSW' ],
+            'qld' => [ 'slug' => 'queensland',                    'abbr' => 'QLD' ],
+            'wa'  => [ 'slug' => 'western-australia',             'abbr' => 'WA'  ],
+            'sa'  => [ 'slug' => 'south-australia',               'abbr' => 'SA'  ],
+            'tas' => [ 'slug' => 'tasmania',                      'abbr' => 'TAS' ],
+            'act' => [ 'slug' => 'australian-capital-territory',  'abbr' => 'ACT' ],
+            'nt'  => [ 'slug' => 'northern-territory',            'abbr' => 'NT'  ],
+        ];
+
+        foreach ( $migrations as $old_slug => $data ) {
+            $term = get_term_by( 'slug', $old_slug, 'au-state' );
+            if ( $term ) {
+                wp_update_term( $term->term_id, 'au-state', [ 'slug' => $data['slug'] ] );
+                update_term_meta( $term->term_id, 'au_state_abbreviation', $data['abbr'] );
+            }
+        }
+
+        update_option( 'crs_state_slugs_v2', true );
     }
 
 } // end class CRS_Setup

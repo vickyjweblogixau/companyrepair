@@ -54,6 +54,13 @@ function crs_deactivate() {
  * ---------------------------------------------------------------------- */
 add_action( 'plugins_loaded', 'crs_load_plugin' );
 
+// One-time migration: update au-state slugs to full names
+add_action( 'admin_init', function () {
+    if ( ! get_option( 'crs_state_slugs_v2' ) && class_exists( 'CRS_Setup' ) ) {
+        CRS_Setup::migrate_state_slugs();
+    }
+} );
+
 function crs_load_plugin() {
     $includes = [
         'inc/class-crs-setup.php',        // CPT, taxonomies, roles, DB
