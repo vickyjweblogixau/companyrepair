@@ -43,8 +43,6 @@ function create_business_owner_role() {
         $capabilities
     );
 }
-
-// ✅ Theme Deactivation (switch_theme = another theme activate aagiduchu)
 add_action( 'switch_theme', function() {
     remove_role( 'business_owner' );
 });

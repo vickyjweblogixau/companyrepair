@@ -1,0 +1,432 @@
+:root {
+  --primary-color: #ec7200;
+  --secondary-color: #000000;
+  --success-color: #22c55e;
+  --error-color: #ef4444;
+  --text-color: #1f2937;
+  --bg-color: #f3f4f6;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Montserrat", sans-serif;
+}
+body {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #f1f1f1;
+    padding: 20px;
+}
+/* Private seller login: footer at bottom, full width */
+body.private-seller-login-page {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+}
+body.private-seller-login-page .auth-container {
+    flex: 0 0 auto;
+    margin: 20px auto;
+}
+body.private-seller-login-page footer {
+	margin-top: 60px;
+	width: 100%;
+	padding: 0px 0;
+	flex-shrink: 0;
+	background: transparent;
+	border: none;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 1200px;
+	min-height: 600px;
+    display: flex;
+    border-radius: 20px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    background: white;
+}
+.auth-sidebar {
+    width: 50%;
+    background: linear-gradient(135deg, rgb(0 0 0 / 0%), rgb(0 0 0 / 0%)), url(../images/banner_bg.jpg) center / cover;
+    padding: 40px;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+.auth-sidebar h2 {
+    font-size: 1.5em;
+    margin-bottom: 15px;
+    font-weight: 500;
+    line-height: 45px;
+    color: white;
+}
+.auth-sidebar h2 span {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+.auth-main {
+  width: 50%;
+  padding: 40px;
+  background: white;
+  position: relative;
+}
+.auth-form {
+  max-width: 400px;
+  margin: 0 auto;
+}
+.form-header {
+  text-align: center;
+  margin-bottom: 120px;
+}
+.form-header h1 {
+  font-size: 2em;
+  color: var(--text-color);
+  margin-bottom: 10px;
+}
+.social-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+  margin-bottom: 25px;
+  font-size: 18px;
+}
+.social-button {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #f3f4f6;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.social-button:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+}
+.divider {
+  text-align: center;
+  margin: 20px 0;
+  position: relative;
+}
+.divider::before,
+.divider::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 45%;
+  height: 1px;
+  background: #e5e7eb;
+}
+.divider::before {
+  left: 0;
+}
+.divider::after {
+  right: 0;
+}
+.form-group {
+  margin-bottom: 20px;
+  position: relative;
+}
+.input-group .form-control {
+  padding: 12px 15px 12px 20px;
+}
+.form-control {
+  width: 100%;
+  padding: 12px 15px 12px 38px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 1em;
+  transition: all 0.3s ease;
+  background: white;
+}
+.form-control:focus {
+  border-color: var(--primary-color);
+  box-shadow: none;
+  outline: none;
+}
+.input-icon {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9ca3af;
+}
+.password-toggle {
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #9ca3af;
+}
+.password-strength {
+  height: 4px;
+  background: #e5e7eb;
+  margin-top: 8px;
+  border-radius: 2px;
+  overflow: hidden;
+}
+.password-strength-bar {
+  height: 100%;
+  width: 0;
+  transition: all 0.3s ease;
+}
+.strength-text {
+  font-size: 0.85em;
+  margin-top: 5px;
+  color: #6b7280;
+}
+.submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: #ec7200;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+.submit-btn:hover {
+  background: #000;
+}
+.submit-btn .loader {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: none;
+}
+.error-message,
+.success-message {
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: none;
+  animation: slideIn 0.3s ease;
+}
+.error-message {
+  background: #fee2e2;
+  color: var(--error-color);
+  border: 1px solid #fecaca;
+}
+.success-message {
+  background: #dcfce7;
+  color: var(--success-color);
+  border: 1px solid #bbf7d0;
+}
+.otp-container {
+  display: none;
+  margin-top: 20px;
+}
+.otp-inputs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin: 15px 0;
+}
+.otp-input {
+  width: 50px;
+  height: 50px;
+  text-align: center;
+  font-size: 1.2em;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+}
+.terms {
+  font-size: 0.9em;
+  color: #6b7280;
+  margin-top: 20px;
+  text-align: center;
+}
+.switch-form {
+    text-align: center;
+    margin-top: 20px;
+    color: #3c3c3c;
+}
+.switch-form a {
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
+@keyframes slideIn {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-5px);
+  }
+  75% {
+    transform: translateX(5px);
+  }
+}
+@media (max-width: 768px) {
+  .auth-container {
+    flex-direction: column;
+  }
+  .auth-sidebar {
+    width: 100%;
+    padding: 20px;
+    min-height: 200px;
+  }
+  .auth-main {
+    width: 100%;
+  }
+}
+/* Additional Animations */
+.slide-up {
+  animation: slideUp 0.5s ease;
+}
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.fade-in {
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Custom Checkbox Style */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 35px;
+	justify-content: space-between;
+}
+.checkbox-container a {
+    text-decoration: none;
+    font-size: 15px;
+    color: #0b7fdc;
+}
+.checkbox-container a:hover {
+    color: #218ee5;
+}
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.custom-checkbox.checked {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+.custom-checkbox i {
+  color: white;
+  font-size: 12px;
+  display: none;
+}
+.custom-checkbox.checked i {
+  display: block;
+}
+.social {
+    margin-top: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+}
+.social p {
+  font-size: 17px;
+}
+.social .text {
+    display: block;
+    margin-right: 8px;
+    opacity: 1;
+}
+.social a {
+    display: flex;
+    margin: 0 4px;
+    width: 35px;
+    height: 35px;
+    border: 2px solid;
+    border-radius: 25px;
+    line-height: 35px;
+    transition: 0.3s;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: #fff;
+    opacity: 0.8;
+    font-size: 17px;
+}
+.social a:hover {
+    opacity: 1;
+}
+.checkbox input {
+    opacity: 0;
+    position: absolute;
+}
+.checkbox label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    color: #000;
+    font-size: 14px;
+}
+.check {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #c7c7c7;
+    border-radius: 4px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s;
+}
+.check svg {
+    width: 12px;
+    height: 12px;
+    fill: white;
+    opacity: 0;
+	color: #fff;
+    transition: opacity 0.2s;
+}
+.checkbox input:checked ~ label .check svg {
+    opacity: 1;
+}
+.checkbox input:checked ~ label .check {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+}

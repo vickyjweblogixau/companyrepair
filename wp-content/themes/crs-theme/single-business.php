@@ -4,84 +4,77 @@
  * Template: Business Profile Page  →  single-page.html prototype
  * URL: /business/{business-slug}/
  */
-
 get_header();
-
+/*
+echo '<pre>';
+echo "POST OBJECT\n";
+print_r(get_post());
+echo "\n\nPOST META\n";
+print_r(get_post_meta(get_the_ID()));
+echo "\n\nACF FIELDS\n";
+print_r(get_fields());
+echo '</pre>';
+exit; */
 if ( ! have_posts() ) {
     get_footer();
     exit;
 }
-
 the_post();
-
 $post_id  = get_the_ID();
-
 // Meta fields
-$tagline   = crs_get_meta( 'business_tagline',  $post_id );
-$about     = crs_get_meta( 'business_about',    $post_id );
-$phone     = crs_get_meta( 'business_phone',    $post_id );
-$email     = crs_get_meta( 'business_email',    $post_id );
-$website   = crs_get_meta( 'business_website',  $post_id );
-$address   = crs_get_meta( 'business_address',  $post_id );
-$logo_id   = crs_get_meta( 'business_logo',     $post_id );
-$gallery   = crs_get_meta( 'business_gallery',  $post_id );  // array of image IDs
-$hours     = crs_get_meta( 'business_hours',    $post_id );  // JSON
-$onsite    = crs_get_meta( 'business_onsite',   $post_id );
-$remote    = crs_get_meta( 'business_remote',   $post_id );
-$pickup    = crs_get_meta( 'business_pickup',   $post_id );
-$same_day  = crs_get_meta( 'business_same_day', $post_id );
-$years     = crs_get_meta( 'business_years',    $post_id );
-$verified  = crs_get_meta( 'business_verified', $post_id );
-$top_rated = crs_get_meta( 'business_top_rated',$post_id );
-$avg       = crs_get_meta( 'review_avg',        $post_id );
-$count     = crs_get_meta( 'review_count',      $post_id );
-$tier      = crs_get_meta( 'subscription_tier', $post_id );
-
+$tagline   = get_field('crs_tagline', $post_id);
+$about     = get_field('crs_description', $post_id);
+$phone     = get_field('crs_phone', $post_id);
+$email     = get_field('crs_email', $post_id);
+$website   = get_field('crs_website', $post_id);
+$address   = get_field('crs_address', $post_id);
+$logo_id   = get_field('crs_logo', $post_id);
+$gallery   = get_field('crs_gallery', $post_id);       // if exists
+$hours     = get_field('crs_business_hours', $post_id);// if exists
+$service_modes = get_field('crs_service_modes', $post_id);
+$onsite = is_array($service_modes) && in_array('onsite', $service_modes);
+$remote = is_array($service_modes) && in_array('remote', $service_modes);
+$pickup = is_array($service_modes) && in_array('pickup', $service_modes);
+$same_day  = get_field('crs_same_day', $post_id);
+$years     = get_field('crs_year_established', $post_id);
+$verified  = get_field('crs_verified', $post_id);
+$top_rated = get_field('crs_top_rated', $post_id);
+$avg       = get_field('crs_review_avg', $post_id);
+$count     = get_field('crs_review_count', $post_id);
+$tier      = get_field('crs_tier', $post_id);
 $logo_url  = $logo_id
     ? wp_get_attachment_image_url( $logo_id, 'crs-thumbnail' )
     : CRS_URI . '/assets/images/logo-placeholder.png';
-
 $hours_arr = $hours ? json_decode( $hours, true ) : [];
-
 // Taxonomies
 $services = get_the_terms( $post_id, 'repair-service' );
 $brands   = get_the_terms( $post_id, 'device-brand' );
 $os_list  = get_the_terms( $post_id, 'operating-system' );
 $gallery  = is_array( $gallery ) ? $gallery : [];
 ?>
-
 <div class="bp-wrap">
 <div class="container px-3">
-
   <!-- BREADCRUMBS -->
   <div class="pt-3">
     <?php crs_breadcrumbs( 'bp' ); ?>
   </div>
-
   <div class="row g-4 mt-0">
-
     <!-- ============================================================
          MAIN COLUMN
          ============================================================ -->
     <div class="col-lg-8">
-
       <!-- ── Business Header Card ─────────────────────────── -->
       <div class="bp-card bp-card-1">
-
         <div class="d-flex gap-4 align-items-start flex-wrap">
-
           <!-- Logo -->
           <div class="bp-logo">
             <img src="<?php echo esc_url( $logo_url ); ?>"
                  alt="<?php the_title_attribute(); ?>"
                  loading="eager">
           </div>
-
           <!-- Name + rating + trust -->
           <div class="flex-grow-1">
-
             <h1 class="bp-name"><?php the_title(); ?></h1>
-
             <?php if ( $avg ) : ?>
               <div class="bp-rating">
                 <span class="stars"><?php crs_render_stars( $avg ); ?></span>
@@ -91,7 +84,6 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                 </span>
               </div>
             <?php endif; ?>
-
             <div class="bp-trust">
               <?php if ( $verified ) : ?>
                 <span><i class="fa-solid fa-circle-check"></i><?php esc_html_e( 'Verified Business', 'crs' ); ?></span>
@@ -111,7 +103,6 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                 <span><i class="fa-solid fa-wifi"></i><?php esc_html_e( 'Remote Support', 'crs' ); ?></span>
               <?php endif; ?>
             </div>
-
             <!-- Action buttons -->
             <div class="bp-actions">
               <?php if ( $phone ) : ?>
@@ -140,10 +131,8 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                 </a>
               <?php endif; ?>
             </div>
-
           </div>
         </div>
-
         <!-- Gallery (featured/premium tier: 4 photos) -->
         <?php if ( $gallery && in_array( $tier, [ 'featured', 'premium' ], true ) ) : ?>
           <div class="bp-gallery mt-4">
@@ -159,86 +148,107 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             <?php endforeach; ?>
           </div>
         <?php endif; ?>
-
       </div><!-- /header card -->
-
       <!-- ── About ─────────────────────────────────────────── -->
-      <?php if ( $about ) : ?>
-        <div class="bp-card">
-          <h2 class="bp-h"><?php esc_html_e( 'About', 'crs' ); ?> <?php the_title(); ?></h2>
-          <?php echo wpautop( esc_html( $about ) ); ?>
-        </div>
-      <?php endif; ?>
-
+        <?php if ( $about ) : ?>
+            <div class="bp-card" style=" white-space: pre-line;">
+                <h2 class="bp-h"><?php esc_html_e( 'About', 'crs' ); ?> <?php the_title(); ?></h2>
+                <div class="bp-about-text">
+                   <?php
+                  echo wp_kses_post( trim($about) );
+                   ?>
+                </div>
+            </div>
+            
+        <?php endif; ?>
       <!-- ── Services Offered ──────────────────────────────── -->
-      <?php if ( $services && ! is_wp_error( $services ) ) : ?>
         <div class="bp-card">
-          <h2 class="bp-h"><?php esc_html_e( 'Services Offered', 'crs' ); ?></h2>
-          <ul class="bp-list check bp-collist">
-            <?php foreach ( $services as $svc ) : ?>
-              <li>
-                <i class="fa-solid fa-circle-check"></i>
-                <a href="<?php echo esc_url( get_term_link( $svc ) ); ?>">
-                  <?php echo esc_html( $svc->name ); ?>
-                </a>
-              </li>
-            <?php endforeach; ?>
-          </ul>
-        </div>
-      <?php endif; ?>
+            <div class="row g-4">
+                <!-- Services -->
+                <div class="col-lg-3">
+                    <h2 class="bp-h">Services Offered</h2>
+                    <?php if ($services && !is_wp_error($services)) : ?>
+                        <ul class="bp-list check">
+                            <?php foreach ($services as $svc) : ?>
+                                <li>
+                                    <i class="fa-solid fa-check"></i>
+                                    <?php echo esc_html($svc->name); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+                <!-- Brands -->
+                <div class="col-lg-3">
+                    <h2 class="bp-h">Brands Supported</h2>
+                    <?php if ($brands && !is_wp_error($brands)) : ?>
+                        <ul class="bp-list">
+                            <?php foreach ($brands as $brand) :
+                            $image_id = get_term_meta($brand->term_id, 'device_brand_image_id', true);
+                            $image = '';
+                            if ($image_id) {
+                                $image = wp_get_attachment_image_url($image_id, 'thumbnail');
+                            }
+                            ?>
+                                <li>
+                                    <?php if($image): ?>
+                                        <img src="<?php echo esc_url($image); ?>" alt="">
+                                    <?php endif; ?>
 
-      <!-- ── Brands + OS ───────────────────────────────────── -->
-      <?php if ( ( $brands && ! is_wp_error( $brands ) ) || ( $os_list && ! is_wp_error( $os_list ) ) ) : ?>
-        <div class="bp-card">
-          <div class="row g-4">
-            <?php if ( $brands && ! is_wp_error( $brands ) ) : ?>
-              <div class="col-md-6">
-                <h2 class="bp-h"><?php esc_html_e( 'Brands Supported', 'crs' ); ?></h2>
-                <ul class="bp-list">
-                  <?php foreach ( $brands as $brand ) :
-                      $logo_url_b = get_term_meta( $brand->term_id, 'brand_logo', true );
-                      ?>
-                      <li>
-                        <?php if ( $logo_url_b ) : ?>
-                          <img src="<?php echo esc_url( $logo_url_b ); ?>"
-                               alt="<?php echo esc_attr( $brand->name ); ?>"
-                               loading="lazy">
+                                    <?php echo esc_html($brand->name); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+                <!-- OS -->
+                <div class="col-lg-3">
+                    <h2 class="bp-h">Operating Systems</h2>
+
+                    <?php if ($os_list && !is_wp_error($os_list)) : ?>
+                        <ul class="bp-list">
+                            <?php foreach ($os_list as $os) :
+                             $image_id = get_term_meta($os->term_id, 'operating_system_image_id', true);
+                            $image = '';
+                            if ($image_id) {
+                                $image = wp_get_attachment_image_url($image_id, 'thumbnail');
+                            } ?>
+                                <li>
+                                   <?php if ($image) : ?>
+                                      <img src="<?php echo esc_url($image); ?>"
+                                          alt="<?php echo esc_attr($brand->name); ?>"
+                                          loading="lazy">
+                                  <?php endif; ?>
+                                    <?php echo esc_html($os->name); ?>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php endif; ?>
+                </div>
+                <!-- Service Options -->
+                <div class="col-lg-3">
+                    <h2 class="bp-h">Service Options</h2>
+
+                    <ul class="bp-list check">
+                        <?php if ($onsite) : ?>
+                            <li><i class="fa-solid fa-check"></i>Onsite Service</li>
                         <?php endif; ?>
-                        <?php echo esc_html( $brand->name ); ?>
-                      </li>
-                  <?php endforeach; ?>
-                </ul>
-              </div>
-            <?php endif; ?>
 
-            <?php if ( $os_list && ! is_wp_error( $os_list ) ) : ?>
-              <div class="col-md-6">
-                <h2 class="bp-h"><?php esc_html_e( 'Operating Systems', 'crs' ); ?></h2>
-                <ul class="bp-list">
-                  <?php foreach ( $os_list as $os ) : ?>
-                    <li>
-                      <i class="fa-brands fa-windows"></i>
-                      <?php echo esc_html( $os->name ); ?>
-                    </li>
-                  <?php endforeach; ?>
-                </ul>
-              </div>
-            <?php endif; ?>
-          </div>
+                        <?php if ($pickup) : ?>
+                            <li><i class="fa-solid fa-check"></i>Pickup & Drop-off</li>
+                        <?php endif; ?>
+
+                        <?php if ($remote) : ?>
+                            <li><i class="fa-solid fa-check"></i>Remote Support</li>
+                        <?php endif; ?>
+
+                        <?php if ($same_day) : ?>
+                            <li><i class="fa-solid fa-check"></i>Same Day Service</li>
+                        <?php endif; ?>
+                    </ul>
+                </div>
+            </div>
         </div>
-      <?php endif; ?>
-
-      <!-- ── Service Options ───────────────────────────────── -->
-      <div class="bp-card">
-        <h2 class="bp-h"><?php esc_html_e( 'Service Options', 'crs' ); ?></h2>
-        <ul class="bp-list check">
-          <?php if ( $onsite )   : ?><li><i class="fa-solid fa-house"></i><?php esc_html_e( 'Onsite Service — comes to you', 'crs' ); ?></li><?php endif; ?>
-          <?php if ( $remote )   : ?><li><i class="fa-solid fa-wifi"></i><?php esc_html_e( 'Remote Support — via internet', 'crs' ); ?></li><?php endif; ?>
-          <?php if ( $pickup )   : ?><li><i class="fa-solid fa-bag-shopping"></i><?php esc_html_e( 'Pickup & Drop-off Available', 'crs' ); ?></li><?php endif; ?>
-          <?php if ( $same_day ) : ?><li><i class="fa-solid fa-bolt"></i><?php esc_html_e( 'Same-Day Service Available', 'crs' ); ?></li><?php endif; ?>
-        </ul>
-      </div>
-
       <!-- ── Reviews ───────────────────────────────────────── -->
       <div class="bp-card">
         <h2 class="bp-h">
@@ -249,7 +259,6 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             </span>
           <?php endif; ?>
         </h2>
-
         <?php
         // Reviews are stored as a custom post type 'crs_review' linked to this business
         $reviews = new WP_Query( [
@@ -263,10 +272,9 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             'orderby' => 'date',
             'order'   => 'DESC',
         ] );
-
         if ( $reviews->have_posts() ) :
             while ( $reviews->have_posts() ) : $reviews->the_post();
-                $r_avg    = get_post_meta( get_the_ID(), '_review_rating', true );
+                $r_avg    = get_post_meta( get_the_ID(), 'crs_top_rated', true );
                 $r_author = get_post_meta( get_the_ID(), '_reviewer_name', true ) ?: __( 'Anonymous', 'crs' );
                 ?>
                 <div class="bp-review">
@@ -286,17 +294,13 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
         else : ?>
           <p class="text-muted-2"><?php esc_html_e( 'No reviews yet. Be the first!', 'crs' ); ?></p>
         <?php endif; ?>
-
       </div><!-- /reviews -->
-
     </div><!-- /col-lg-8 -->
-
     <!-- ============================================================
          SIDEBAR
          ============================================================ -->
     <div class="col-lg-4">
       <div class="bp-sticky">
-
         <!-- Request a Quote -->
         <div class="bp-card bp-quote" id="enquiry">
           <h3 class="bp-side-title">
@@ -304,7 +308,6 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             <?php esc_html_e( 'Request a Quote', 'crs' ); ?>
           </h3>
           <p><?php esc_html_e( 'Send a message directly to this business. They will reply to your email within 24 hours.', 'crs' ); ?></p>
-
           <?php
           // Enquiry form shortcode — powered by crs-business-dashboard plugin
           if ( shortcode_exists( 'crs_enquiry_form' ) ) :
@@ -339,7 +342,6 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             </form>
           <?php endif; ?>
         </div><!-- /enquiry -->
-
         <!-- Contact Information -->
         <div class="bp-card mt-3">
           <h3 class="bp-side-title">
@@ -379,7 +381,6 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             <?php endif; ?>
           </ul>
         </div>
-
         <!-- Opening Hours -->
         <?php if ( $hours_arr ) : ?>
           <div class="bp-card mt-3">
@@ -408,12 +409,9 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             </table>
           </div>
         <?php endif; ?>
-
       </div><!-- /bp-sticky -->
     </div><!-- /sidebar -->
-
   </div><!-- /row -->
 </div><!-- /container -->
 </div><!-- /bp-wrap -->
-
 <?php get_footer(); ?>

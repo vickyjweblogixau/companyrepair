@@ -1,0 +1,222 @@
+/**
+ * CFS access gate (dealer + private seller dashboards).
+ * Full-viewport background via fixed ::before so theme content area height does not clip the fill.
+ */
+
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400..700&display=swap");
+
+.sd-access-gate {
+  --sd-ag-card: #ffffff;
+  --sd-ag-text: #25233a;
+  --sd-ag-muted: #6c6983;
+  --sd-ag-border: #e8eaf4;
+  --sd-ag-blue: #2f64c9;
+  --sd-ag-blue-dark: #2554ae;
+  --sd-ag-orange: #e89a2c;
+  --sd-ag-orange-dark: #db8a17;
+  --sd-ag-shadow: 0 12px 40px rgba(36, 33, 66, 0.07);
+  --sd-ag-radius: 20px;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--sd-ag-text);
+  box-sizing: border-box;
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 18px 48px;
+  background: transparent;
+}
+
+.sd-access-gate::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(99, 140, 255, 0.09), transparent 55%),
+    radial-gradient(ellipse 90% 50% at 100% 50%, rgba(255, 200, 120, 0.06), transparent 45%),
+    linear-gradient(180deg, #f8f9ff 0%, #f3f5fc 35%, #eef1fb 70%, #f7f8fd 100%);
+}
+
+.sd-access-gate *,
+.sd-access-gate *::before,
+.sd-access-gate *::after {
+  box-sizing: border-box;
+}
+
+.sd-access-gate__shell {
+  width: 100%;
+  max-width: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+}
+
+.sd-access-gate__brand {
+  display: flex;
+  justify-content: center;
+}
+
+.sd-access-gate__brand img {
+  display: block;
+  max-width: 200px;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
+
+.sd-access-gate__card {
+  width: 100%;
+  background: var(--sd-ag-card);
+  border: 1px solid var(--sd-ag-border);
+  border-radius: var(--sd-ag-radius);
+  box-shadow: var(--sd-ag-shadow);
+  padding: 28px 26px 26px;
+  text-align: center;
+}
+
+.sd-access-gate__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sd-access-gate__icon svg {
+  width: 28px;
+  height: 28px;
+}
+
+.sd-access-gate--guest .sd-access-gate__icon {
+  background: linear-gradient(145deg, #eef1ff, #e2e8ff);
+  color: var(--sd-ag-blue);
+}
+
+.sd-access-gate--wrong-role .sd-access-gate__icon {
+  background: linear-gradient(145deg, #fff4e8, #ffe8d4);
+  color: var(--sd-ag-orange);
+}
+
+.sd-access-gate__title {
+  margin: 0 0 12px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--sd-ag-text);
+  line-height: 1.25;
+}
+
+.sd-access-gate__body {
+  margin: 0 0 8px;
+  color: var(--sd-ag-muted);
+  font-size: 0.95rem;
+}
+
+.sd-access-gate__body strong {
+  color: var(--sd-ag-text);
+  font-weight: 600;
+}
+
+.sd-access-gate__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 22px;
+}
+
+.sd-access-gate__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
+}
+
+.sd-access-gate__btn:focus-visible {
+  outline: 2px solid var(--sd-ag-blue);
+  outline-offset: 2px;
+}
+
+.sd-access-gate__btn--primary {
+  background: linear-gradient(180deg, #3b72dd 0%, var(--sd-ag-blue) 100%);
+  color: #fff;
+  border-color: var(--sd-ag-blue);
+  box-shadow: 0 6px 16px rgba(47, 100, 201, 0.22);
+}
+
+.sd-access-gate__btn--primary:hover {
+  background: linear-gradient(180deg, #4a7de8 0%, var(--sd-ag-blue-dark) 100%);
+  border-color: var(--sd-ag-blue-dark);
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(47, 100, 201, 0.28);
+}
+
+.sd-access-gate__btn--accent {
+  background: linear-gradient(180deg, #f0aa39 0%, var(--sd-ag-orange) 100%);
+  color: #fff;
+  border-color: var(--sd-ag-orange);
+  box-shadow: 0 6px 16px rgba(232, 154, 44, 0.25);
+}
+
+.sd-access-gate__btn--accent:hover {
+  background: linear-gradient(180deg, #f4b24a 0%, var(--sd-ag-orange-dark) 100%);
+  border-color: var(--sd-ag-orange-dark);
+  color: #fff;
+}
+
+.sd-access-gate__btn--outline {
+  background: #fff;
+  color: #3b3950;
+  border-color: #ddddea;
+}
+
+.sd-access-gate__btn--outline:hover {
+  background: #fafafd;
+  border-color: #cfcfdb;
+  color: #25233a;
+}
+
+@media (max-width: 480px) {
+  .sd-access-gate {
+    padding: 24px 14px 40px;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  .sd-access-gate__card {
+    padding: 22px 18px 20px;
+  }
+
+  .sd-access-gate__actions {
+    flex-direction: column;
+  }
+
+  .sd-access-gate__btn {
+    width: 100%;
+  }
+}
