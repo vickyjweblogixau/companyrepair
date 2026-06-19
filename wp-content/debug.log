@@ -1,0 +1,8 @@
+[18-Jun-2026 13:48:29 UTC] PHP Fatal error:  Uncaught TypeError: call_user_func(): Argument #1 ($callback) must be a valid callback, function "post_categories_metabox" not found or invalid function name in /home/customer/www/computerrepairservices.com.au/public_html/wp-admin/includes/template.php:1458
+Stack trace:
+#0 /home/customer/www/computerrepairservices.com.au/public_html/wp-admin/edit-form-advanced.php(714): do_meta_boxes(Object(WP_Screen), 'side', Object(WP_Post))
+#1 /home/customer/www/computerrepairservices.com.au/public_html/wp-admin/post-new.php(75): require('/home/customer/...')
+#2 {main}
+  thrown in /home/customer/www/computerrepairservices.com.au/public_html/wp-admin/includes/template.php on line 1458
+[19-Jun-2026 00:08:39 UTC] Automatic updates starting...
+[19-Jun-2026 00:08:40 UTC] Automatic updates complete.

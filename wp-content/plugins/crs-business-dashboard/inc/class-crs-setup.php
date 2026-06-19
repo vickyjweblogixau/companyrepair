@@ -25,7 +25,7 @@ class CRS_Setup {
             'labels' => [
                 'name'               => __( 'Businesses',              'crs' ),
                 'singular_name'      => __( 'Business',               'crs' ),
-                'menu_name'          => __( 'CRS Taxonomy',            'crs' ),
+                'menu_name'          => __( 'CRS Business',             'crs' ),
                 'add_new'            => __( 'Add New',                'crs' ),
                 'add_new_item'       => __( 'Add New Business',       'crs' ),
                 'edit_item'          => __( 'Edit Business',          'crs' ),
@@ -44,8 +44,7 @@ class CRS_Setup {
             'has_archive'        => 'services',
             'rewrite'            => [ 'slug' => 'business', 'with_front' => false ],
             'supports'           => [ 'title', 'thumbnail' ],
-            'capability_type'    => 'business',
-            'map_meta_cap'       => true,
+            'capability_type'    => 'post',
             'menu_icon'          => 'dashicons-store',
             'menu_position'      => 5,
         ] );
@@ -56,10 +55,12 @@ class CRS_Setup {
        ================================================================== */
     public static function register_taxonomies() {
 
+        // Repair Services — checkbox list so admins can tick existing terms
         register_taxonomy( 'repair-service', 'business', [
-            'hierarchical'      => false,
+            'hierarchical'      => true,                         // enables checkbox meta box
             'public'            => true,
             'show_admin_column' => true,
+            'meta_box_cb'       => 'post_categories_meta_box',   // checkbox list, not tag input
             'rewrite'           => [ 'slug' => 'services', 'with_front' => false ],
             'labels' => [
                 'name'          => __( 'Repair Services', 'crs' ),
@@ -69,10 +70,12 @@ class CRS_Setup {
             ],
         ] );
 
+        // State — ACF select field handles this in the main edit area; hide default sidebar box
         register_taxonomy( 'au-state', 'business', [
             'hierarchical'      => false,
             'public'            => true,
             'show_admin_column' => true,
+            'meta_box_cb'       => false,   // hidden — ACF Contact & Location field handles it
             'rewrite'           => [ 'slug' => 'state', 'with_front' => false ],
             'labels' => [
                 'name'          => __( 'States',     'crs' ),
@@ -81,10 +84,12 @@ class CRS_Setup {
             ],
         ] );
 
+        // Region — ACF select field handles this; hide default sidebar box
         register_taxonomy( 'au-region', 'business', [
-            'hierarchical' => true,
-            'public'       => true,
-            'rewrite'      => [ 'slug' => 'region', 'with_front' => false ],
+            'hierarchical'  => true,
+            'public'        => true,
+            'meta_box_cb'   => false,   // hidden — ACF Contact & Location field handles it
+            'rewrite'       => [ 'slug' => 'region', 'with_front' => false ],
             'labels' => [
                 'name'          => __( 'Regions',     'crs' ),
                 'singular_name' => __( 'Region',      'crs' ),
@@ -92,10 +97,12 @@ class CRS_Setup {
             ],
         ] );
 
+        // Suburb — ACF select field handles this; hide default sidebar box
         register_taxonomy( 'au-suburb', 'business', [
-            'hierarchical' => true,
-            'public'       => true,
-            'rewrite'      => [ 'slug' => 'suburb', 'with_front' => false ],
+            'hierarchical'  => true,
+            'public'        => true,
+            'meta_box_cb'   => false,   // hidden — ACF Contact & Location field handles it
+            'rewrite'       => [ 'slug' => 'suburb', 'with_front' => false ],
             'labels' => [
                 'name'          => __( 'Suburbs',     'crs' ),
                 'singular_name' => __( 'Suburb',      'crs' ),
@@ -103,10 +110,12 @@ class CRS_Setup {
             ],
         ] );
 
+        // Device Brands — checkbox list
         register_taxonomy( 'device-brand', 'business', [
-            'hierarchical'      => false,
+            'hierarchical'      => true,
             'public'            => true,
             'show_admin_column' => true,
+            'meta_box_cb'       => 'post_categories_meta_box',
             'rewrite'           => [ 'slug' => 'brand', 'with_front' => false ],
             'labels' => [
                 'name'          => __( 'Device Brands', 'crs' ),
@@ -115,10 +124,12 @@ class CRS_Setup {
             ],
         ] );
 
+        // Operating Systems — checkbox list
         register_taxonomy( 'operating-system', 'business', [
-            'hierarchical'      => false,
+            'hierarchical'      => true,
             'public'            => true,
             'show_admin_column' => true,
+            'meta_box_cb'       => 'post_categories_meta_box',
             'rewrite'           => [ 'slug' => 'os', 'with_front' => false ],
             'labels' => [
                 'name'          => __( 'Operating Systems',     'crs' ),

@@ -20,30 +20,31 @@ require_once CRS_DIR . '/inc/enqueue.php';
 require_once CRS_DIR . '/inc/template-helpers.php';
 require_once CRS_DIR . '/inc/breadcrumbs.php';
 // New Role
-function create_subscriber_role() {
-    remove_role( 'subscriber' );
-    $subscriber = get_role( 'subscriber' );
-    $caps = $subscriber ? $subscriber->capabilities : [];
-    $post_caps = [
+add_action( 'after_switch_theme', 'create_business_owner_role' );
+
+function create_business_owner_role() {
+    if ( get_role( 'business_owner' ) ) {
+        return; // Already exists, skip
+    }
+
+    $capabilities = [
         'read'                   => true,
-        'edit_posts'             => true,  // Edit own posts
-        'edit_published_posts'   => true,  // Edit own published posts
-        'delete_posts'           => true,  // Delete own posts
-        'delete_published_posts' => true,  // Delete own published posts
-        'publish_posts'          => true,  // Publish own posts
-        'upload_files'           => true,  // Upload media
+        'edit_posts'             => true,
+        'edit_published_posts'   => true,
+        'delete_posts'           => true,
+        'delete_published_posts' => true,
+        'publish_posts'          => true,
+        'upload_files'           => true,
     ];
 
-    $capabilities = array_merge( $caps, $post_caps );
-
     add_role(
-        'subscriber',          // Role slug
-        'Subscriber',          // Display name
+        'business_owner',
+        'Business Owner',
         $capabilities
     );
 }
-add_action( 'init', 'create_subscriber_role' );
-function remove_subscriber_editor_role() {
-    remove_role( 'subscriber' );
-}
-register_deactivation_hook( __FILE__, 'remove_subscriber_editor_role' );
+
+// ✅ Theme Deactivation (switch_theme = another theme activate aagiduchu)
+add_action( 'switch_theme', function() {
+    remove_role( 'business_owner' );
+});

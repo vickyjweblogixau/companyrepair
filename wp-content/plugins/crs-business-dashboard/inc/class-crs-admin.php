@@ -656,3 +656,878 @@ class CRS_AU_Region_Fields {
 }
 
 CRS_AU_Region_Fields::init();
+
+
+/* ============================================================
+   AU Suburb – full meta fields, CSV import & export
+   ============================================================
+   Meta keys stored on each au-suburb term:
+     au_suburb_state      → au-state  term_id
+     au_suburb_region     → au-region term_id
+     au_suburb_postcode   → string
+     au_suburb_25km       → comma-separated postcodes
+     au_suburb_50km       → comma-separated postcodes
+     au_suburb_100km      → comma-separated postcodes
+     au_suburb_250km      → comma-separated postcodes
+     au_suburb_quadrant   → comma-separated postcodes
+   ============================================================ */
+
+class CRS_AU_Suburb_Fields {
+
+    /* ---- meta-key constants ---- */
+    const STATE_META    = 'au_suburb_state';
+    const REGION_META   = 'au_suburb_region';
+    const PC_META       = 'au_suburb_postcode';
+    const KM25_META     = 'au_suburb_25km';
+    const KM50_META     = 'au_suburb_50km';
+    const KM100_META    = 'au_suburb_100km';
+    const KM250_META    = 'au_suburb_250km';
+    const QUAD_META     = 'au_suburb_quadrant';
+
+    public static function init() {
+
+        /* --- form fields --- */
+        add_action( 'au-suburb_add_form_fields',  [ __CLASS__, 'add_form_fields'  ] );
+        add_action( 'au-suburb_edit_form_fields', [ __CLASS__, 'edit_form_fields' ], 10, 2 );
+
+        /* --- save --- */
+        add_action( 'created_au-suburb', [ __CLASS__, 'save_fields' ] );
+        add_action( 'edited_au-suburb',  [ __CLASS__, 'save_fields' ] );
+
+        /* --- list-table columns --- */
+        add_filter( 'manage_edit-au-suburb_columns',  [ __CLASS__, 'add_columns'    ] );
+        add_filter( 'manage_au-suburb_custom_column', [ __CLASS__, 'render_column'  ], 10, 3 );
+
+        /* --- CSV import section (appended after add form) --- */
+        add_action( 'au-suburb_add_form', [ __CLASS__, 'csv_import_section' ] );
+
+        /* --- admin-post handlers --- */
+        add_action( 'admin_post_crs_import_suburbs', [ __CLASS__, 'handle_csv_import' ] );
+        add_action( 'admin_post_crs_export_suburbs', [ __CLASS__, 'handle_csv_export' ] );
+
+        /* --- Export button on list page --- */
+        add_action( 'au-suburb_add_form', [ __CLASS__, 'export_button' ] );
+    }
+
+    /* =================================================================
+       Shared: dropdowns
+    ================================================================= */
+
+    private static function state_dropdown( $selected = 0 ) {
+        $states = get_terms( [ 'taxonomy' => 'au-state', 'hide_empty' => false ] );
+        echo '<select name="' . esc_attr( self::STATE_META ) . '" id="au_suburb_state" class="crs-suburb-state-select">';
+        echo '<option value="">' . esc_html__( '— None —', 'crs' ) . '</option>';
+        if ( ! is_wp_error( $states ) ) {
+            foreach ( $states as $s ) {
+                $abbr  = get_term_meta( $s->term_id, 'au_state_abbreviation', true );
+                $label = $abbr ? $s->name . ' (' . $abbr . ')' : $s->name;
+                printf(
+                    '<option value="%d"%s>%s</option>',
+                    $s->term_id,
+                    selected( $selected, $s->term_id, false ),
+                    esc_html( $label )
+                );
+            }
+        }
+        echo '</select>';
+    }
+
+    private static function region_dropdown( $selected = 0, $state_id = 0 ) {
+        $args   = [ 'taxonomy' => 'au-region', 'hide_empty' => false, 'orderby' => 'name' ];
+        $regions = get_terms( $args );
+        echo '<select name="' . esc_attr( self::REGION_META ) . '" id="au_suburb_region">';
+        echo '<option value="">' . esc_html__( '— None —', 'crs' ) . '</option>';
+        if ( ! is_wp_error( $regions ) ) {
+            foreach ( $regions as $r ) {
+                // Optionally filter by state if set
+                if ( $state_id ) {
+                    $r_state = (int) get_term_meta( $r->term_id, 'au_region_state', true );
+                    if ( $r_state && $r_state !== $state_id ) {
+                        continue;
+                    }
+                }
+                printf(
+                    '<option value="%d"%s>%s</option>',
+                    $r->term_id,
+                    selected( $selected, $r->term_id, false ),
+                    esc_html( $r->name )
+                );
+            }
+        }
+        echo '</select>';
+    }
+
+    /* =================================================================
+       Add-new form fields  (no <tr> wrappers)
+    ================================================================= */
+
+    public static function add_form_fields() {
+        self::render_fields();
+    }
+
+    /* =================================================================
+       Edit form fields  (needs <tr> wrappers)
+    ================================================================= */
+
+    public static function edit_form_fields( $term ) {
+        $meta = self::get_meta( $term->term_id );
+        self::render_fields( $meta, true );
+    }
+
+    /* =================================================================
+       Shared field renderer
+    ================================================================= */
+
+    private static function get_meta( $term_id ) {
+        return [
+            'state'    => (int)    get_term_meta( $term_id, self::STATE_META,  true ),
+            'region'   => (int)    get_term_meta( $term_id, self::REGION_META, true ),
+            'postcode' => (string) get_term_meta( $term_id, self::PC_META,     true ),
+            'km25'     => (string) get_term_meta( $term_id, self::KM25_META,   true ),
+            'km50'     => (string) get_term_meta( $term_id, self::KM50_META,   true ),
+            'km100'    => (string) get_term_meta( $term_id, self::KM100_META,  true ),
+            'km250'    => (string) get_term_meta( $term_id, self::KM250_META,  true ),
+            'quadrant' => (string) get_term_meta( $term_id, self::QUAD_META,   true ),
+        ];
+    }
+
+    private static function render_fields( $meta = [], $edit_mode = false ) {
+        $m = array_merge( [
+            'state' => 0, 'region' => 0, 'postcode' => '',
+            'km25' => '', 'km50' => '', 'km100' => '', 'km250' => '', 'quadrant' => '',
+        ], $meta );
+
+        $fields = [
+            [ 'id' => 'au_suburb_postcode', 'label' => 'Post Code',
+              'html' => '<input type="text" name="' . esc_attr( self::PC_META ) . '" id="au_suburb_postcode"
+                               value="' . esc_attr( $m['postcode'] ) . '" maxlength="10" style="width:120px;">
+                         <p class="description">4-digit Australian postcode for this suburb.</p>' ],
+
+            [ 'id' => 'au_suburb_state', 'label' => 'State',
+              'html' => self::capture( fn() => self::state_dropdown( $m['state'] ) ) .
+                        '<p class="description">Which state does this suburb belong to?</p>' ],
+
+            [ 'id' => 'au_suburb_region', 'label' => 'Region',
+              'html' => self::capture( fn() => self::region_dropdown( $m['region'], $m['state'] ) ) .
+                        '<p class="description">Which region does this suburb belong to?</p>' ],
+
+            [ 'id' => 'au_suburb_25km',  'label' => 'Suburbs within 25 km',
+              'html' => '<textarea name="' . esc_attr( self::KM25_META ) . '" id="au_suburb_25km"
+                                  rows="3" style="width:100%;">' . esc_textarea( $m['km25'] ) . '</textarea>
+                         <p class="description">Comma-separated postcodes of suburbs within 25 km of this suburb\'s postcode.</p>' ],
+
+            [ 'id' => 'au_suburb_50km',  'label' => 'Suburbs within 50 km',
+              'html' => '<textarea name="' . esc_attr( self::KM50_META ) . '" id="au_suburb_50km"
+                                  rows="3" style="width:100%;">' . esc_textarea( $m['km50'] ) . '</textarea>
+                         <p class="description">Comma-separated postcodes within 50 km.</p>' ],
+
+            [ 'id' => 'au_suburb_100km', 'label' => 'Suburbs within 100 km',
+              'html' => '<textarea name="' . esc_attr( self::KM100_META ) . '" id="au_suburb_100km"
+                                  rows="3" style="width:100%;">' . esc_textarea( $m['km100'] ) . '</textarea>
+                         <p class="description">Comma-separated postcodes within 100 km.</p>' ],
+
+            [ 'id' => 'au_suburb_250km', 'label' => 'Suburbs within 250 km',
+              'html' => '<textarea name="' . esc_attr( self::KM250_META ) . '" id="au_suburb_250km"
+                                  rows="3" style="width:100%;">' . esc_textarea( $m['km250'] ) . '</textarea>
+                         <p class="description">Comma-separated postcodes within 250 km.</p>' ],
+
+            [ 'id' => 'au_suburb_quadrant', 'label' => 'Quadrant Suburbs',
+              'html' => '<textarea name="' . esc_attr( self::QUAD_META ) . '" id="au_suburb_quadrant"
+                                  rows="3" style="width:100%;">' . esc_textarea( $m['quadrant'] ) . '</textarea>
+                         <p class="description">Comma-separated postcodes in the same geographic quadrant as this suburb.</p>' ],
+        ];
+
+        if ( $edit_mode ) {
+            foreach ( $fields as $f ) {
+                echo '<tr class="form-field">';
+                echo '<th scope="row"><label for="' . esc_attr( $f['id'] ) . '">' . esc_html__( $f['label'], 'crs' ) . '</label></th>';
+                echo '<td>' . $f['html'] . '</td>';
+                echo '</tr>';
+            }
+        } else {
+            foreach ( $fields as $f ) {
+                echo '<div class="form-field">';
+                echo '<label for="' . esc_attr( $f['id'] ) . '">' . esc_html__( $f['label'], 'crs' ) . '</label>';
+                echo $f['html'];
+                echo '</div>';
+            }
+        }
+    }
+
+    /** Capture output-buffer output from a callable. */
+    private static function capture( callable $fn ): string {
+        ob_start();
+        $fn();
+        return ob_get_clean();
+    }
+
+    /* =================================================================
+       Save
+    ================================================================= */
+
+    public static function save_fields( $term_id ) {
+        $map = [
+            self::STATE_META  => 'absint',
+            self::REGION_META => 'absint',
+            self::PC_META     => 'sanitize_text_field',
+            self::KM25_META   => [ __CLASS__, 'sanitize_postcodes' ],
+            self::KM50_META   => [ __CLASS__, 'sanitize_postcodes' ],
+            self::KM100_META  => [ __CLASS__, 'sanitize_postcodes' ],
+            self::KM250_META  => [ __CLASS__, 'sanitize_postcodes' ],
+            self::QUAD_META   => [ __CLASS__, 'sanitize_postcodes' ],
+        ];
+
+        foreach ( $map as $key => $cb ) {
+            if ( ! isset( $_POST[ $key ] ) ) {
+                continue;
+            }
+            $value = call_user_func( $cb, wp_unslash( $_POST[ $key ] ) );
+            if ( $value !== '' && $value !== 0 ) {
+                update_term_meta( $term_id, $key, $value );
+            } else {
+                delete_term_meta( $term_id, $key );
+            }
+        }
+    }
+
+    /** Normalise a comma-separated postcode string. */
+    public static function sanitize_postcodes( $raw ) {
+        $parts = array_map( 'trim', explode( ',', sanitize_text_field( $raw ) ) );
+        $parts = array_filter( $parts, fn( $p ) => $p !== '' );
+        return implode( ', ', $parts );
+    }
+
+    /* =================================================================
+       List-table columns
+    ================================================================= */
+
+    public static function add_columns( $columns ) {
+        $new = [];
+        foreach ( $columns as $key => $label ) {
+            $new[ $key ] = $label;
+            if ( $key === 'name' ) {
+                $new['suburb_postcode'] = __( 'Postcode', 'crs' );
+                $new['suburb_state']    = __( 'State',    'crs' );
+                $new['suburb_region']   = __( 'Region',   'crs' );
+            }
+        }
+        return $new;
+    }
+
+    public static function render_column( $content, $column_name, $term_id ) {
+        switch ( $column_name ) {
+
+            case 'suburb_postcode':
+                $pc = get_term_meta( $term_id, self::PC_META, true );
+                return $pc ? esc_html( $pc ) : '—';
+
+            case 'suburb_state':
+                $state_id = (int) get_term_meta( $term_id, self::STATE_META, true );
+                if ( ! $state_id ) return '—';
+                $state = get_term( $state_id, 'au-state' );
+                if ( is_wp_error( $state ) || ! $state ) return '—';
+                $abbr = get_term_meta( $state->term_id, 'au_state_abbreviation', true );
+                return esc_html( $abbr ?: $state->name );
+
+            case 'suburb_region':
+                $region_id = (int) get_term_meta( $term_id, self::REGION_META, true );
+                if ( ! $region_id ) return '—';
+                $region = get_term( $region_id, 'au-region' );
+                if ( is_wp_error( $region ) || ! $region ) return '—';
+                return esc_html( $region->name );
+        }
+        return $content;
+    }
+
+    /* =================================================================
+       CSV Import section
+    ================================================================= */
+
+    /**
+     * CSV column order (first row = header):
+     *   name | slug | state_slug | region_slug | postcode |
+     *   suburbs_25km | suburbs_50km | suburbs_100km | suburbs_250km |
+     *   suburbs_quadrant | description
+     */
+    public static function csv_import_section() {
+        $result = isset( $_GET['crs_suburb_import'] ) ? sanitize_text_field( $_GET['crs_suburb_import'] ) : '';
+        $count  = isset( $_GET['crs_count'] )   ? (int) $_GET['crs_count']  : 0;
+        $errors = isset( $_GET['crs_errors'] )  ? (int) $_GET['crs_errors'] : 0;
+        ?>
+        <div class="wrap" style="margin-top:30px;padding:20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;">
+            <h2 style="margin-top:0;"><?php esc_html_e( 'Import Suburbs via CSV', 'crs' ); ?></h2>
+
+            <?php if ( $result === 'done' ) : ?>
+                <div class="notice notice-success inline">
+                    <p><?php printf( esc_html__( 'Import complete: %d suburb(s) added, %d skipped/errored.', 'crs' ), $count, $errors ); ?></p>
+                </div>
+            <?php elseif ( $result === 'error' ) : ?>
+                <div class="notice notice-error inline">
+                    <p><?php esc_html_e( 'Import failed. Please check your CSV file and try again.', 'crs' ); ?></p>
+                </div>
+            <?php endif; ?>
+
+            <p style="color:#555;"><?php esc_html_e( 'Upload a CSV file to bulk-import suburbs. Row 1 must be a header row.', 'crs' ); ?></p>
+            <p>
+                <strong><?php esc_html_e( 'Columns (in order):', 'crs' ); ?></strong><br>
+                <code>name, slug, state_slug, region_slug, postcode, suburbs_25km, suburbs_50km, suburbs_100km, suburbs_250km, suburbs_quadrant, description</code><br>
+                <small><?php esc_html_e( 'slug, region_slug, and all km/quadrant fields may be blank. state_slug must match an existing state slug (e.g. victoria). km/quadrant fields are pipe-separated postcodes within the cell, or you may quote the cell and use commas.', 'crs' ); ?></small>
+            </p>
+
+            <form method="post" enctype="multipart/form-data"
+                  action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
+                <input type="hidden" name="action" value="crs_import_suburbs">
+                <?php wp_nonce_field( 'crs_import_suburbs', 'crs_suburb_import_nonce' ); ?>
+                <table class="form-table" style="max-width:500px;">
+                    <tr>
+                        <th><label for="crs_suburbs_csv"><?php esc_html_e( 'CSV File', 'crs' ); ?></label></th>
+                        <td>
+                            <input type="file" name="crs_suburbs_csv" id="crs_suburbs_csv" accept=".csv">
+                            <p class="description"><?php esc_html_e( 'UTF-8 encoded .csv file.', 'crs' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label for="crs_suburb_csv_delimiter"><?php esc_html_e( 'Delimiter', 'crs' ); ?></label></th>
+                        <td>
+                            <select name="crs_csv_delimiter" id="crs_suburb_csv_delimiter">
+                                <option value=","><?php esc_html_e( 'Comma  ( , )', 'crs' ); ?></option>
+                                <option value=";"><?php esc_html_e( 'Semicolon  ( ; )', 'crs' ); ?></option>
+                                <option value="&#9;"><?php esc_html_e( 'Tab', 'crs' ); ?></option>
+                            </select>
+                        </td>
+                    </tr>
+                </table>
+                <?php submit_button( __( 'Import Suburbs', 'crs' ), 'secondary' ); ?>
+            </form>
+
+            <p style="margin-top:16px;">
+                <a href="<?php echo esc_url( self::sample_csv_url() ); ?>" download="sample-suburbs.csv">
+                    <?php esc_html_e( '⬇ Download sample CSV', 'crs' ); ?>
+                </a>
+            </p>
+        </div>
+        <?php
+    }
+
+    /** Generates a data-URI for the sample CSV download. */
+    private static function sample_csv_url() {
+        $csv  = "name,slug,state_slug,region_slug,postcode,suburbs_25km,suburbs_50km,suburbs_100km,suburbs_250km,suburbs_quadrant,description\n";
+        $csv .= "Richmond,richmond,victoria,inner-melbourne,3121,3122|3123|3141,3000|3004|3006,3050|3072,3220|3550,3122|3124,Inner suburb of Melbourne\n";
+        $csv .= "Fitzroy,fitzroy,victoria,inner-melbourne,3065,3066|3067|3068,3000|3004,3050|3072,3220|3550,3066|3068,\n";
+        return 'data:text/csv;charset=utf-8,' . rawurlencode( $csv );
+    }
+
+    /* =================================================================
+       Export button
+    ================================================================= */
+
+    public static function export_button() {
+        $url = wp_nonce_url(
+            admin_url( 'admin-post.php?action=crs_export_suburbs' ),
+            'crs_export_suburbs'
+        );
+        ?>
+        <div class="wrap" style="margin-top:20px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;">
+            <h2 style="margin-top:0;"><?php esc_html_e( 'Export Suburbs', 'crs' ); ?></h2>
+            <p style="color:#555;"><?php esc_html_e( 'Download all suburb terms with every field as a CSV file.', 'crs' ); ?></p>
+            <a href="<?php echo esc_url( $url ); ?>" class="button button-primary">
+                <?php esc_html_e( '⬇ Export All Suburbs to CSV', 'crs' ); ?>
+            </a>
+        </div>
+        <?php
+    }
+
+    /* =================================================================
+       CSV Import handler
+    ================================================================= */
+
+    public static function handle_csv_import() {
+        if (
+            ! current_user_can( 'manage_categories' ) ||
+            ! isset( $_POST['crs_suburb_import_nonce'] ) ||
+            ! wp_verify_nonce( $_POST['crs_suburb_import_nonce'], 'crs_import_suburbs' )
+        ) {
+            wp_die( esc_html__( 'Permission denied.', 'crs' ) );
+        }
+
+        $redirect_base = admin_url( 'edit-tags.php?taxonomy=au-suburb&post_type=business' );
+
+        if ( empty( $_FILES['crs_suburbs_csv']['tmp_name'] ) ) {
+            wp_safe_redirect( add_query_arg( 'crs_suburb_import', 'error', $redirect_base ) );
+            exit;
+        }
+
+        $delimiter = isset( $_POST['crs_csv_delimiter'] ) ? $_POST['crs_csv_delimiter'] : ',';
+        if ( ! in_array( $delimiter, [ ',', ';', "\t" ], true ) ) {
+            $delimiter = ',';
+        }
+
+        $file = fopen( $_FILES['crs_suburbs_csv']['tmp_name'], 'r' );
+        if ( ! $file ) {
+            wp_safe_redirect( add_query_arg( 'crs_suburb_import', 'error', $redirect_base ) );
+            exit;
+        }
+
+        // Skip header
+        fgetcsv( $file, 0, $delimiter );
+
+        $inserted = 0;
+        $errored  = 0;
+
+        while ( ( $row = fgetcsv( $file, 0, $delimiter ) ) !== false ) {
+            $row = array_pad( $row, 11, '' );
+            [
+                $name, $slug, $state_slug, $region_slug, $postcode,
+                $km25, $km50, $km100, $km250, $quadrant, $description
+            ] = array_map( 'trim', $row );
+
+            if ( $name === '' ) continue;
+
+            // Build term args
+            $args = [];
+            if ( $slug !== '' )        $args['slug']        = sanitize_title( $slug );
+            if ( $description !== '' ) $args['description'] = sanitize_textarea_field( $description );
+
+            if ( term_exists( $name, 'au-suburb' ) ) { $errored++; continue; }
+
+            $result = wp_insert_term( sanitize_text_field( $name ), 'au-suburb', $args );
+            if ( is_wp_error( $result ) ) { $errored++; continue; }
+
+            $tid = $result['term_id'];
+
+            // State
+            if ( $state_slug !== '' ) {
+                $state_term = get_term_by( 'slug', sanitize_title( $state_slug ), 'au-state' );
+                if ( $state_term ) update_term_meta( $tid, self::STATE_META, $state_term->term_id );
+            }
+
+            // Region
+            if ( $region_slug !== '' ) {
+                $region_term = get_term_by( 'slug', sanitize_title( $region_slug ), 'au-region' );
+                if ( $region_term ) update_term_meta( $tid, self::REGION_META, $region_term->term_id );
+            }
+
+            // Postcode
+            if ( $postcode !== '' ) update_term_meta( $tid, self::PC_META, sanitize_text_field( $postcode ) );
+
+            // km / quadrant fields – stored as pipe-separated in CSV, normalised to "pc1, pc2" in meta
+            $pc_fields = [
+                self::KM25_META  => $km25,
+                self::KM50_META  => $km50,
+                self::KM100_META => $km100,
+                self::KM250_META => $km250,
+                self::QUAD_META  => $quadrant,
+            ];
+            foreach ( $pc_fields as $meta_key => $raw ) {
+                if ( $raw === '' ) continue;
+                // Support both pipe-separated and comma-separated values within the CSV cell
+                $normalised = self::sanitize_postcodes( str_replace( '|', ',', $raw ) );
+                update_term_meta( $tid, $meta_key, $normalised );
+            }
+
+            $inserted++;
+        }
+
+        fclose( $file );
+
+        wp_safe_redirect( add_query_arg( [
+            'crs_suburb_import' => 'done',
+            'crs_count'         => $inserted,
+            'crs_errors'        => $errored,
+        ], $redirect_base ) );
+        exit;
+    }
+
+    /* =================================================================
+       CSV Export handler
+    ================================================================= */
+
+    public static function handle_csv_export() {
+        if (
+            ! current_user_can( 'manage_categories' ) ||
+            ! isset( $_GET['_wpnonce'] ) ||
+            ! wp_verify_nonce( $_GET['_wpnonce'], 'crs_export_suburbs' )
+        ) {
+            wp_die( esc_html__( 'Permission denied.', 'crs' ) );
+        }
+
+        $terms = get_terms( [
+            'taxonomy'   => 'au-suburb',
+            'hide_empty' => false,
+            'number'     => 0,
+            'orderby'    => 'name',
+        ] );
+
+        if ( is_wp_error( $terms ) ) {
+            wp_die( esc_html__( 'Could not retrieve suburb terms.', 'crs' ) );
+        }
+
+        $filename = 'au-suburbs-' . gmdate( 'Y-m-d' ) . '.csv';
+
+        header( 'Content-Type: text/csv; charset=UTF-8' );
+        header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
+        header( 'Pragma: no-cache' );
+        header( 'Expires: 0' );
+
+        $out = fopen( 'php://output', 'w' );
+
+        // UTF-8 BOM so Excel opens it correctly
+        fwrite( $out, "\xEF\xBB\xBF" );
+
+        // Header row
+        fputcsv( $out, [
+            'name', 'slug', 'description', 'parent_slug',
+            'state_slug', 'state_name',
+            'region_slug', 'region_name',
+            'postcode',
+            'suburbs_25km', 'suburbs_50km', 'suburbs_100km', 'suburbs_250km',
+            'suburbs_quadrant',
+        ] );
+
+        foreach ( $terms as $term ) {
+            // Parent slug
+            $parent_slug = '';
+            if ( $term->parent ) {
+                $parent_term = get_term( $term->parent, 'au-suburb' );
+                if ( $parent_term && ! is_wp_error( $parent_term ) ) {
+                    $parent_slug = $parent_term->slug;
+                }
+            }
+
+            // State
+            $state_slug = $state_name = '';
+            $state_id   = (int) get_term_meta( $term->term_id, self::STATE_META, true );
+            if ( $state_id ) {
+                $state = get_term( $state_id, 'au-state' );
+                if ( $state && ! is_wp_error( $state ) ) {
+                    $state_slug = $state->slug;
+                    $state_name = $state->name;
+                }
+            }
+
+            // Region
+            $region_slug = $region_name = '';
+            $region_id   = (int) get_term_meta( $term->term_id, self::REGION_META, true );
+            if ( $region_id ) {
+                $region = get_term( $region_id, 'au-region' );
+                if ( $region && ! is_wp_error( $region ) ) {
+                    $region_slug = $region->slug;
+                    $region_name = $region->name;
+                }
+            }
+
+            fputcsv( $out, [
+                $term->name,
+                $term->slug,
+                $term->description,
+                $parent_slug,
+                $state_slug,
+                $state_name,
+                $region_slug,
+                $region_name,
+                (string) get_term_meta( $term->term_id, self::PC_META,    true ),
+                (string) get_term_meta( $term->term_id, self::KM25_META,  true ),
+                (string) get_term_meta( $term->term_id, self::KM50_META,  true ),
+                (string) get_term_meta( $term->term_id, self::KM100_META, true ),
+                (string) get_term_meta( $term->term_id, self::KM250_META, true ),
+                (string) get_term_meta( $term->term_id, self::QUAD_META,  true ),
+            ] );
+        }
+
+        fclose( $out );
+        exit;
+    }
+
+} // end class CRS_AU_Suburb_Fields
+
+CRS_AU_Suburb_Fields::init();
+
+
+/* ============================================================
+   Device Brand – Featured Image (term meta)
+   ============================================================ */
+
+class CRS_Device_Brand_Image {
+
+    const META_KEY = 'device_brand_image_id';
+
+    public static function init() {
+        add_action( 'device-brand_add_form_fields',  [ __CLASS__, 'add_form_field'  ] );
+        add_action( 'device-brand_edit_form_fields', [ __CLASS__, 'edit_form_field' ], 10, 2 );
+        add_action( 'created_device-brand', [ __CLASS__, 'save' ] );
+        add_action( 'edited_device-brand',  [ __CLASS__, 'save' ] );
+        add_filter( 'manage_edit-device-brand_columns',  [ __CLASS__, 'add_column'    ] );
+        add_filter( 'manage_device-brand_custom_column', [ __CLASS__, 'render_column' ], 10, 3 );
+        add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_scripts' ] );
+    }
+
+    public static function enqueue_scripts( $hook ) {
+        $screen = get_current_screen();
+        if ( ! $screen || $screen->taxonomy !== 'device-brand' ) {
+            return;
+        }
+        wp_enqueue_media();
+        wp_add_inline_script( 'jquery-core', self::inline_js() );
+    }
+
+    private static function inline_js() {
+        return <<<'JS'
+jQuery(function ($) {
+    $(document).on('click', '.crs-upload-image-btn', function (e) {
+        e.preventDefault();
+        var $btn     = $(this);
+        var $wrap    = $btn.closest('.crs-image-wrap');
+        var $input   = $wrap.find('.crs-image-id');
+        var $preview = $wrap.find('.crs-image-preview');
+        var $remove  = $wrap.find('.crs-remove-image-btn');
+        var frame = wp.media({ title: 'Select Brand Image', button: { text: 'Use this image' }, multiple: false });
+        frame.on('select', function () {
+            var attachment = frame.state().get('selection').first().toJSON();
+            $input.val(attachment.id);
+            $preview.html('<img src="' + attachment.url + '" style="max-width:150px;height:auto;margin-top:8px;border-radius:4px;">');
+            $remove.show();
+        });
+        frame.open();
+    });
+    $(document).on('click', '.crs-remove-image-btn', function (e) {
+        e.preventDefault();
+        var $wrap = $(this).closest('.crs-image-wrap');
+        $wrap.find('.crs-image-id').val('');
+        $wrap.find('.crs-image-preview').html('');
+        $(this).hide();
+    });
+});
+JS;
+    }
+
+    private static function field_html( $image_id = 0 ) {
+        $preview = '';
+        $remove  = 'display:none';
+        if ( $image_id ) {
+            $src = wp_get_attachment_image_url( $image_id, 'thumbnail' );
+            if ( $src ) {
+                $preview = '<img src="' . esc_url( $src ) . '" style="max-width:150px;height:auto;margin-top:8px;border-radius:4px;">';
+                $remove  = '';
+            }
+        }
+        ob_start(); ?>
+        <div class="crs-image-wrap">
+            <input type="hidden" name="<?php echo esc_attr( self::META_KEY ); ?>"
+                   class="crs-image-id" value="<?php echo esc_attr( $image_id ?: '' ); ?>">
+            <div class="crs-image-preview"><?php echo $preview; ?></div>
+            <button type="button" class="button crs-upload-image-btn" style="margin-top:8px;">
+                <?php echo $image_id ? 'Change Image' : 'Upload / Select Image'; ?>
+            </button>
+            <button type="button" class="button crs-remove-image-btn" style="margin-left:6px;<?php echo $remove; ?>">
+                Remove Image
+            </button>
+            <p class="description">Logo or image representing this device brand.</p>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    public static function add_form_field() {
+        ?>
+        <div class="form-field term-image-wrap">
+            <label><?php esc_html_e( 'Featured Image', 'crs' ); ?></label>
+            <?php echo self::field_html(); ?>
+        </div>
+        <?php
+    }
+
+    public static function edit_form_field( $term ) {
+        $image_id = (int) get_term_meta( $term->term_id, self::META_KEY, true );
+        ?>
+        <tr class="form-field term-image-wrap">
+            <th scope="row"><label><?php esc_html_e( 'Featured Image', 'crs' ); ?></label></th>
+            <td><?php echo self::field_html( $image_id ); ?></td>
+        </tr>
+        <?php
+    }
+
+    public static function save( $term_id ) {
+        if ( ! isset( $_POST[ self::META_KEY ] ) ) {
+            return;
+        }
+        $image_id = absint( $_POST[ self::META_KEY ] );
+        if ( $image_id ) {
+            update_term_meta( $term_id, self::META_KEY, $image_id );
+        } else {
+            delete_term_meta( $term_id, self::META_KEY );
+        }
+    }
+
+    public static function add_column( $columns ) {
+        $new = [];
+        foreach ( $columns as $key => $label ) {
+            $new[ $key ] = $label;
+            if ( $key === 'name' ) {
+                $new['brand_image'] = __( 'Image', 'crs' );
+            }
+        }
+        return $new;
+    }
+
+    public static function render_column( $content, $column_name, $term_id ) {
+        if ( $column_name !== 'brand_image' ) {
+            return $content;
+        }
+        $image_id = (int) get_term_meta( $term_id, self::META_KEY, true );
+        if ( $image_id ) {
+            $src = wp_get_attachment_image_url( $image_id, 'thumbnail' );
+            if ( $src ) {
+                return '<img src="' . esc_url( $src ) . '" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">';
+            }
+        }
+        return '—';
+    }
+
+} // end class CRS_Device_Brand_Image
+
+CRS_Device_Brand_Image::init();
+
+
+/* ============================================================
+   Operating System – Logo (term meta)
+   ============================================================ */
+
+class CRS_Operating_System_Image {
+
+    const META_KEY = 'operating_system_image_id';
+
+    public static function init() {
+        add_action( 'operating-system_add_form_fields',  [ __CLASS__, 'add_form_field'  ] );
+        add_action( 'operating-system_edit_form_fields', [ __CLASS__, 'edit_form_field' ], 10, 2 );
+        add_action( 'created_operating-system', [ __CLASS__, 'save' ] );
+        add_action( 'edited_operating-system',  [ __CLASS__, 'save' ] );
+        add_filter( 'manage_edit-operating-system_columns',  [ __CLASS__, 'add_column'    ] );
+        add_filter( 'manage_operating-system_custom_column', [ __CLASS__, 'render_column' ], 10, 3 );
+        add_action( 'admin_enqueue_scripts', [ __CLASS__, 'enqueue_scripts' ] );
+    }
+
+    public static function enqueue_scripts( $hook ) {
+        $screen = get_current_screen();
+        if ( ! $screen || $screen->taxonomy !== 'operating-system' ) {
+            return;
+        }
+        wp_enqueue_media();
+        wp_add_inline_script( 'jquery-core', self::inline_js() );
+    }
+
+    private static function inline_js() {
+        return <<<'JS'
+jQuery(function ($) {
+    $(document).on('click', '.crs-upload-image-btn', function (e) {
+        e.preventDefault();
+        var $btn     = $(this);
+        var $wrap    = $btn.closest('.crs-image-wrap');
+        var $input   = $wrap.find('.crs-image-id');
+        var $preview = $wrap.find('.crs-image-preview');
+        var $remove  = $wrap.find('.crs-remove-image-btn');
+        var frame = wp.media({ title: 'Select OS Logo', button: { text: 'Use this image' }, multiple: false });
+        frame.on('select', function () {
+            var attachment = frame.state().get('selection').first().toJSON();
+            $input.val(attachment.id);
+            $preview.html('<img src="' + attachment.url + '" style="max-width:150px;height:auto;margin-top:8px;border-radius:4px;">');
+            $remove.show();
+        });
+        frame.open();
+    });
+    $(document).on('click', '.crs-remove-image-btn', function (e) {
+        e.preventDefault();
+        var $wrap = $(this).closest('.crs-image-wrap');
+        $wrap.find('.crs-image-id').val('');
+        $wrap.find('.crs-image-preview').html('');
+        $(this).hide();
+    });
+});
+JS;
+    }
+
+    private static function field_html( $image_id = 0 ) {
+        $preview = '';
+        $remove  = 'display:none';
+        if ( $image_id ) {
+            $src = wp_get_attachment_image_url( $image_id, 'thumbnail' );
+            if ( $src ) {
+                $preview = '<img src="' . esc_url( $src ) . '" style="max-width:150px;height:auto;margin-top:8px;border-radius:4px;">';
+                $remove  = '';
+            }
+        }
+        ob_start(); ?>
+        <div class="crs-image-wrap">
+            <input type="hidden" name="<?php echo esc_attr( self::META_KEY ); ?>"
+                   class="crs-image-id" value="<?php echo esc_attr( $image_id ?: '' ); ?>">
+            <div class="crs-image-preview"><?php echo $preview; ?></div>
+            <button type="button" class="button crs-upload-image-btn" style="margin-top:8px;">
+                <?php echo $image_id ? 'Change Logo' : 'Upload / Select Logo'; ?>
+            </button>
+            <button type="button" class="button crs-remove-image-btn" style="margin-left:6px;<?php echo $remove; ?>">
+                Remove Logo
+            </button>
+            <p class="description">Logo representing this operating system.</p>
+        </div>
+        <?php
+        return ob_get_clean();
+    }
+
+    public static function add_form_field() {
+        ?>
+        <div class="form-field term-image-wrap">
+            <label><?php esc_html_e( 'Logo', 'crs' ); ?></label>
+            <?php echo self::field_html(); ?>
+        </div>
+        <?php
+    }
+
+    public static function edit_form_field( $term ) {
+        $image_id = (int) get_term_meta( $term->term_id, self::META_KEY, true );
+        ?>
+        <tr class="form-field term-image-wrap">
+            <th scope="row"><label><?php esc_html_e( 'Logo', 'crs' ); ?></label></th>
+            <td><?php echo self::field_html( $image_id ); ?></td>
+        </tr>
+        <?php
+    }
+
+    public static function save( $term_id ) {
+        if ( ! isset( $_POST[ self::META_KEY ] ) ) {
+            return;
+        }
+        $image_id = absint( $_POST[ self::META_KEY ] );
+        if ( $image_id ) {
+            update_term_meta( $term_id, self::META_KEY, $image_id );
+        } else {
+            delete_term_meta( $term_id, self::META_KEY );
+        }
+    }
+
+    public static function add_column( $columns ) {
+        $new = [];
+        foreach ( $columns as $key => $label ) {
+            $new[ $key ] = $label;
+            if ( $key === 'name' ) {
+                $new['os_logo'] = __( 'Logo', 'crs' );
+            }
+        }
+        return $new;
+    }
+
+    public static function render_column( $content, $column_name, $term_id ) {
+        if ( $column_name !== 'os_logo' ) {
+            return $content;
+        }
+        $image_id = (int) get_term_meta( $term_id, self::META_KEY, true );
+        if ( $image_id ) {
+            $src = wp_get_attachment_image_url( $image_id, 'thumbnail' );
+            if ( $src ) {
+                return '<img src="' . esc_url( $src ) . '" style="width:50px;height:50px;object-fit:cover;border-radius:4px;">';
+            }
+        }
+        return '—';
+    }
+
+} // end class CRS_Operating_System_Image
+
+CRS_Operating_System_Image::init();

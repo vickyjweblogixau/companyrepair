@@ -80,4 +80,35 @@ function crs_load_plugin() {
             require_once $path;
         }
     }
+
+    // Hook CPT + taxonomy registration onto every page load.
+    // (activation hook alone is not enough — WP requires re-registration each request)
+    CRS_Setup::init();
+}
+
+/* --------------------------------------------------------------------------
+ * Ensure administrator always has the custom business capabilities.
+ * Runs once per request in admin; cheap no-op if caps already exist.
+ * ---------------------------------------------------------------------- */
+add_action( 'admin_init', 'crs_ensure_admin_caps' );
+
+function crs_ensure_admin_caps() {
+    $admin = get_role( 'administrator' );
+    if ( ! $admin ) {
+        return;
+    }
+
+    $caps = [
+        'read_business', 'edit_business', 'edit_businesses',
+        'edit_others_businesses', 'edit_published_businesses',
+        'publish_businesses', 'delete_business', 'delete_businesses',
+        'delete_others_businesses', 'delete_published_businesses',
+        'read_private_businesses', 'crs_dashboard_access', 'crs_admin_access',
+    ];
+
+    foreach ( $caps as $cap ) {
+        if ( ! $admin->has_cap( $cap ) ) {
+            $admin->add_cap( $cap );
+        }
+    }
 }
