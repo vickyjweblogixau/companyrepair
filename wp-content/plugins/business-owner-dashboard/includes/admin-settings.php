@@ -91,7 +91,7 @@ function bod_render_settings_page() {
                     <td>
                         <input type="password" name="bod_addon_webhook_secret" id="bod_addon_webhook_secret"
                                value="<?php echo esc_attr(get_option('bod_addon_webhook_secret')); ?>" class="regular-text">
-                        <p class="description">Separate webhook signing secret for boost/addon purchases (optional — can use main webhook).</p>
+                        <p class="description">Signing secret for the addon webhook at: <code><?php echo home_url('/wp-json/business-owners-addons/v1/webhook'); ?></code></p>
                     </td>
                 </tr>
                 <tr>
@@ -218,12 +218,20 @@ function bod_render_settings_page() {
             <!-- WEBHOOK INFO -->
             <!-- =============================== -->
             <h2 class="title">Stripe Webhook Setup</h2>
-            <p>In your <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Dashboard → Developers → Webhooks</a>, add an endpoint with the URL below and subscribe to the <strong>checkout.session.completed</strong> event.</p>
+            <p>In your <a href="https://dashboard.stripe.com/webhooks" target="_blank">Stripe Dashboard → Developers → Webhooks</a>, add the endpoints below and subscribe to the <strong>checkout.session.completed</strong> event on each.</p>
             <table class="form-table">
                 <tr>
-                    <th>Webhook URL</th>
+                    <th>Main Webhook URL</th>
                     <td>
-                        <code style="background:#f1f1f1;padding:8px;display:block;"><?php echo home_url('/wp-json/business-owners/v1/webhook'); ?></code>
+                        <code style="background:#f1f1f1;padding:8px;display:block;margin-bottom:4px;"><?php echo home_url('/wp-json/business-owners/v1/webhook'); ?></code>
+                        <p class="description">Handles signup payments and listing purchases. Use <strong>Stripe Webhook Secret</strong> above.</p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Addon Webhook URL</th>
+                    <td>
+                        <code style="background:#f1f1f1;padding:8px;display:block;margin-bottom:4px;"><?php echo home_url('/wp-json/business-owners-addons/v1/webhook'); ?></code>
+                        <p class="description">Handles boost and addon purchases. Use <strong>Addon Webhook Secret</strong> above. This is the URL you register in your Stripe addon/secondary webhook.</p>
                     </td>
                 </tr>
                 <tr>

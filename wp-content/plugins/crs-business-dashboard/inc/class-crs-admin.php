@@ -534,7 +534,7 @@ class CRS_AU_Region_Fields {
             </form>
 
             <p style="margin-top:16px;">
-                <a href="<?php echo esc_url( self::sample_csv_url() ); ?>" download="sample-regions.csv">
+                <a href="<?php echo esc_attr( self::sample_csv_url() ); ?>" download="sample-regions.csv">
                     <?php esc_html_e( '⬇ Download sample CSV', 'crs' ); ?>
                 </a>
             </p>
@@ -1001,7 +1001,7 @@ class CRS_AU_Suburb_Fields {
             </form>
 
             <p style="margin-top:16px;">
-                <a href="<?php echo esc_url( self::sample_csv_url() ); ?>" download="sample-suburbs.csv">
+                <a href="<?php echo esc_attr( self::sample_csv_url() ); ?>" download="sample-suburbs.csv">
                     <?php esc_html_e( '⬇ Download sample CSV', 'crs' ); ?>
                 </a>
             </p>

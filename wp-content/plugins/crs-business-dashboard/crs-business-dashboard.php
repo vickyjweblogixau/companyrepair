@@ -72,6 +72,7 @@ function crs_load_plugin() {
         'inc/class-crs-admin.php',        // WP Admin menu pages
         'inc/class-crs-ajax.php',         // AJAX handlers
         'inc/class-crs-rewrite.php',      // Custom rewrite rules
+        'inc/class-crs-email.php',    // ← email body function idhula varum
     ];
 
     foreach ( $includes as $file ) {

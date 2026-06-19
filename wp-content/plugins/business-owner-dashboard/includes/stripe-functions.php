@@ -129,17 +129,22 @@ function bod_create_signup_checkout($owner_data) {
             'success_url' => $success_url,
             'cancel_url'  => $cancel_url,
             'metadata'    => [
-                'owner_name'    => $owner_data['name'] ?? '',
-                'owner_email'   => $owner_data['email'] ?? '',
-                'owner_phone'   => $owner_data['phone'] ?? '',
-                'business_name' => $owner_data['business_name'] ?? '',
-                'postal_code'   => $owner_data['postal_code'] ?? '',
-                'suburb'        => $owner_data['suburb'] ?? '',
-                'state'         => $owner_data['state'] ?? '',
-                'region'        => $owner_data['region'] ?? '',
-                'is_signup'     => 'yes',
-                'source'        => 'business_owner_signup',
-                'promotion_code'=> $owner_data['promotion_code'] ?? '',
+                'owner_name'           => $owner_data['name'] ?? '',
+                'owner_email'          => $owner_data['email'] ?? '',
+                'owner_phone'          => $owner_data['phone'] ?? '',
+                'business_name'        => $owner_data['business_name'] ?? '',
+                'abn'                  => $owner_data['abn'] ?? '',
+                'website_url'          => $owner_data['website_url'] ?? '',
+                'postal_code'          => $owner_data['postal_code'] ?? '',
+                'suburb'               => $owner_data['suburb'] ?? '',
+                'state'                => $owner_data['state'] ?? '',
+                'region'               => $owner_data['region'] ?? '',
+                'primary_service_area' => $owner_data['primary_service_area'] ?? '',
+                'service_radius'       => $owner_data['service_radius'] ?? '',
+                'services'             => substr($owner_data['services'] ?? '', 0, 490),
+                'is_signup'            => 'yes',
+                'source'               => 'business_owner_signup',
+                'promotion_code'       => $owner_data['promotion_code'] ?? '',
             ],
             'payment_intent_data' => [
                 'metadata' => [
@@ -444,13 +449,48 @@ function bod_webhook_process_boost($session) {
     bod_add_notification($owner_id, 'boost', 'Boost activated', ucfirst($boost_type) . ' boost has been applied to your listing.');
 }
 
-function bod_webhook_process_buy_listing($session) {
-    $owner_id = (int) ($session->metadata->owner_id ?? 0);
-    if (!$owner_id) return;
 
+function bod_webhook_process_buy_listing($session) {
+    global $wpdb;
+
+    $owner_id = (int) ($session->metadata->owner_id ?? 0);
+    if (!$owner_id) {
+        error_log('[BOD Webhook] Buy listing: no owner_id in session ' . $session->id);
+        return;
+    }
+
+    $owner = bod_get_owner($owner_id);
+    if (!$owner) {
+        error_log('[BOD Webhook] Buy listing: owner not found for id ' . $owner_id);
+        return;
+    }
+
+    // Prevent duplicate processing
+    $existing = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM " . BOD_TABLE_PAYMENTS . " WHERE stripe_checkout_session_id = %s LIMIT 1",
+        $session->id
+    ));
+    if ($existing && $existing->status === 'succeeded') {
+        error_log('[BOD Webhook] Buy listing: already processed session ' . $session->id);
+        return;
+    }
+
+    // Create listing record + payment record
     $listing_id = (int) bod_create_listing_record($owner_id, $session);
     bod_create_payment_record($owner_id, $listing_id, 'listing', $session);
-    bod_activate_listing($listing_id, $owner_id);
+
+    // Activate the listing credit
+    if ($listing_id) {
+        bod_activate_listing($listing_id, $owner_id);
+    } else {
+        $wpdb->query($wpdb->prepare(
+            "UPDATE " . BOD_TABLE_OWNERS . " SET available_listing_credits = available_listing_credits + 1, total_listings_purchased = total_listings_purchased + 1 WHERE id = %d",
+            $owner_id
+        ));
+    }
+
+    bod_add_notification($owner_id, 'listing', 'Listing credit added', 'Your new listing credit has been activated. You can now create a new listing from your dashboard.');
     bod_send_listing_invoice_email($owner_id, $session);
-    bod_add_notification($owner_id, 'listing', 'New listing credit added', 'Your payment was successful. You now have a new listing credit.');
+
+    error_log('[BOD Webhook] Buy listing: processed for owner ' . $owner_id);
 }

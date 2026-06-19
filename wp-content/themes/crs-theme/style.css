@@ -39,13 +39,18 @@ Tags:        directory, business-listings, responsive, bootstrap
 /* ==========================================================================
    GLOBAL RESET & BASE
    ========================================================================== */
-* { font-family: var(--crs-font); }
+body { font-family: var(--crs-font); }
 
 body {
     color: var(--crs-ink);
     background: var(--crs-bg);
     font-size: 15px;
 }
+
+/* Force Font Awesome to use its own font — prevents theme font override */
+.fa-solid, .fas  { font-family: "Font Awesome 6 Free" !important; font-weight: 900 !important; }
+.fa-regular, .far { font-family: "Font Awesome 6 Free" !important; font-weight: 400 !important; }
+.fa-brands, .fab  { font-family: "Font Awesome 6 Brands" !important; font-weight: 400 !important; }
 
 a { text-decoration: none; }
 

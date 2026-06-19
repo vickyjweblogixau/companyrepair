@@ -5,16 +5,6 @@
  * URL: /business/{business-slug}/
  */
 get_header();
-/*
-echo '<pre>';
-echo "POST OBJECT\n";
-print_r(get_post());
-echo "\n\nPOST META\n";
-print_r(get_post_meta(get_the_ID()));
-echo "\n\nACF FIELDS\n";
-print_r(get_fields());
-echo '</pre>';
-exit; */
 if ( ! have_posts() ) {
     get_footer();
     exit;
@@ -45,7 +35,24 @@ $tier      = get_field('crs_tier', $post_id);
 $logo_url  = $logo_id
     ? wp_get_attachment_image_url( $logo_id, 'crs-thumbnail' )
     : CRS_URI . '/assets/images/logo-placeholder.png';
-$hours_arr = $hours ? json_decode( $hours, true ) : [];
+//$hours_arr = $hours ? json_decode( $hours, true ) : [];
+$days = [
+    'monday'    => 'Monday',
+    'tuesday'   => 'Tuesday',
+    'wednesday' => 'Wednesday',
+    'thursday'  => 'Thursday',
+    'friday'    => 'Friday',
+    'saturday'  => 'Saturday',
+    'sunday'    => 'Sunday',
+];
+$hours_arr = [];
+foreach ($days as $key => $label) {
+    $hours_arr[$label] = [
+        'open'   => get_field("crs_hours_{$key}_open"),
+        'close'  => get_field("crs_hours_{$key}_close"),
+        'closed' => get_field("crs_hours_{$key}_closed"),
+    ];
+}
 // Taxonomies
 $services = get_the_terms( $post_id, 'repair-service' );
 $brands   = get_the_terms( $post_id, 'device-brand' );
@@ -111,11 +118,12 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                   <i class="fa-solid fa-phone"></i><?php echo esc_html( $phone ); ?>
                 </a>
               <?php endif; ?>
-              <?php if ( in_array( $tier, [ 'standard', 'featured', 'premium' ], true ) ) : ?>
-                <a href="#enquiry" class="bp-btn bp-btn-outline">
-                  <i class="fa-solid fa-envelope"></i><?php esc_html_e( 'Enquiry Now', 'crs' ); ?>
+              <?php //if ( in_array( $tier, [ 'standard', 'featured', 'premium' ], true ) ) : ?>
+                 <a href="#" class="bp-btn bp-btn-primary" data-business-id="<?php echo get_the_ID(); ?>"
+                  data-bs-toggle="modal" data-bs-target="#enquiryModal"><i
+                      class="fa-solid fa-envelope"></i> Enquire Now</a>
                 </a>
-              <?php endif; ?>
+              <?php //endif; ?>
               <?php if ( $website ) : ?>
                 <a href="<?php echo esc_url( $website ); ?>"
                    class="bp-btn bp-btn-ghost"
@@ -136,16 +144,15 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
         <!-- Gallery (featured/premium tier: 4 photos) -->
         <?php if ( $gallery && in_array( $tier, [ 'featured', 'premium' ], true ) ) : ?>
           <div class="bp-gallery mt-4">
-            <?php foreach ( array_slice( $gallery, 0, 4 ) as $img_id ) :
-                $img_url = wp_get_attachment_image_url( $img_id, 'crs-gallery' );
-                if ( ! $img_url ) continue;
-                ?>
-                <div class="bp-shot">
-                  <img src="<?php echo esc_url( $img_url ); ?>"
-                       alt=""
-                       loading="lazy">
-                </div>
-            <?php endforeach; ?>
+            <?php 
+            $gallery_field_keys = [ 'crs_gallery_1', 'crs_gallery_2', 'crs_gallery_3', 'crs_gallery_4' ];
+            $gallery = [];
+            foreach ( $gallery_field_keys as $gkey ) {
+                $img_id = function_exists( 'get_field' ) ? get_field( $gkey, $post_id ) : '';
+                if ( $img_id ) {
+                    $gallery[] = $img_id;
+                }
+            } ?>
           </div>
         <?php endif; ?>
       </div><!-- /header card -->
@@ -302,6 +309,7 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
     <div class="col-lg-4">
       <div class="bp-sticky">
         <!-- Request a Quote -->
+        <?php /*
         <div class="bp-card bp-quote" id="enquiry">
           <h3 class="bp-side-title">
             <i class="fa-solid fa-paper-plane"></i>
@@ -342,6 +350,42 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             </form>
           <?php endif; ?>
         </div><!-- /enquiry -->
+        */ ?>
+                <!-- Opening Hours -->
+        <?php if ( $hours_arr ) : ?>
+        <div class="bp-card mt-3">
+            <h3 class="bp-side-title">
+                <i class="fa-solid fa-clock"></i>
+                <?php esc_html_e( 'Opening Hours', 'crs' ); ?>
+            </h3>
+
+            <table class="bp-hours">
+                <?php
+                $days = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+                foreach ( $days as $day ) :
+
+                    $info   = $hours_arr[$day] ?? [];
+                    $closed = empty($info['open']) || empty($info['close']);
+                ?>
+                    <tr>
+                        <td><?php echo esc_html($day); ?></td>
+                        <td class="<?php echo $closed ? 'closed' : ''; ?>">
+                            <?php
+                            if ( $closed ) {
+                                esc_html_e( 'Closed', 'crs' );
+                            } else {
+                                $open_time  = date('g:i A', strtotime($info['open']));
+                                $close_time = date('g:i A', strtotime($info['close']));
+                                echo esc_html($open_time . ' – ' . $close_time);
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </table>
+        </div>
+        <?php endif; ?>
         <!-- Contact Information -->
         <div class="bp-card mt-3">
           <h3 class="bp-side-title">
@@ -381,37 +425,28 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             <?php endif; ?>
           </ul>
         </div>
-        <!-- Opening Hours -->
-        <?php if ( $hours_arr ) : ?>
-          <div class="bp-card mt-3">
-            <h3 class="bp-side-title">
-              <i class="fa-solid fa-clock"></i>
-              <?php esc_html_e( 'Opening Hours', 'crs' ); ?>
-            </h3>
-            <table class="bp-hours w-100">
-              <?php
-              $days = [ 'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday' ];
-              foreach ( $days as $day ) :
-                  $info   = $hours_arr[ $day ] ?? null;
-                  $closed = ! $info || empty( $info['open'] );
-                  ?>
-                  <tr>
-                    <td><?php echo esc_html( $day ); ?></td>
-                    <td class="<?php echo $closed ? 'closed' : ''; ?>">
-                      <?php if ( $closed ) : ?>
-                        <?php esc_html_e( 'Closed', 'crs' ); ?>
-                      <?php else : ?>
-                        <?php echo esc_html( $info['open'] . ' – ' . $info['close'] ); ?>
-                      <?php endif; ?>
-                    </td>
-                  </tr>
-              <?php endforeach; ?>
-            </table>
-          </div>
-        <?php endif; ?>
+
+       <!-- Get a Free Quote -->
+        <div class="bp-card bp-quote">
+              <h3 class="bp-side-title"><i class="fa-solid fa-file-lines"></i> Get a Free Quote</h3>
+              <p>Fill out the form and ABC Computers will get back to you shortly.</p>
+              <button type="button" class="bp-quote-btn" data-business-id="<?php echo get_the_ID(); ?>" data-bs-target="#enquiryModal"><i class="fa-solid fa-paper-plane me-2"></i>Request a
+                Quote</button>
+            </div>
       </div><!-- /bp-sticky -->
     </div><!-- /sidebar -->
   </div><!-- /row -->
 </div><!-- /container -->
 </div><!-- /bp-wrap -->
+<?php get_template_part('template-parts/enquiry', 'modal'); ?>
+
 <?php get_footer(); ?>
+<script>
+jQuery(function ($) {
+    $('#enquiryModal').on('show.bs.modal', function (e) {
+        var businessId = $(e.relatedTarget).data('business-id');
+        $(this).find('#business_id').val(businessId);
+    });
+
+});
+</script>

@@ -132,16 +132,22 @@ function bod_ajax_initiate_signup() {
     check_ajax_referer('bod_signup', 'nonce');
 
     $owner_data = [
-        'name'          => sanitize_text_field($_POST['name'] ?? ''),
-        'email'         => sanitize_email($_POST['email'] ?? ''),
-        'phone'         => sanitize_text_field($_POST['phone'] ?? ''),
-        'business_name' => sanitize_text_field($_POST['business_name'] ?? ''),
-        'postal_code'   => sanitize_text_field($_POST['postal_code'] ?? ''),
-        'address'       => sanitize_text_field($_POST['address'] ?? ''),
-        'suburb'        => sanitize_text_field($_POST['suburb'] ?? ''),
-        'state'         => sanitize_text_field($_POST['state'] ?? ''),
-        'region'        => sanitize_text_field($_POST['region'] ?? ''),
-        'promotion_code'=> sanitize_text_field($_POST['promotion_code'] ?? ''),
+        'name'                 => sanitize_text_field($_POST['name'] ?? ''),
+        'email'                => sanitize_email($_POST['email'] ?? ''),
+        'phone'                => sanitize_text_field($_POST['phone'] ?? ''),
+        'business_name'        => sanitize_text_field($_POST['business_name'] ?? ''),
+        'abn'                  => sanitize_text_field($_POST['abn'] ?? ''),
+        'website_url'          => esc_url_raw($_POST['website_url'] ?? ''),
+        'postal_code'          => sanitize_text_field($_POST['postal_code'] ?? ''),
+        'address'              => sanitize_text_field($_POST['address'] ?? ''),
+        'suburb'               => sanitize_text_field($_POST['suburb'] ?? ''),
+        'state'                => sanitize_text_field($_POST['state'] ?? ''),
+        'region'               => sanitize_text_field($_POST['region'] ?? ''),
+        'primary_service_area' => sanitize_text_field($_POST['primary_service_area'] ?? ''),
+        'service_radius'       => sanitize_text_field($_POST['service_radius'] ?? ''),
+        'description'          => sanitize_textarea_field($_POST['description'] ?? ''),
+        'services'             => sanitize_text_field($_POST['services'] ?? ''),
+        'promotion_code'       => sanitize_text_field($_POST['promotion_code'] ?? ''),
     ];
 
     if (empty($owner_data['name']) || empty($owner_data['email']) || empty($owner_data['phone'])) {
@@ -195,20 +201,15 @@ add_action('wp_ajax_bod_mark_listing_sold', function() {
     $owner_id   = bod_get_current_owner_id();
     $listing    = bod_get_listing($listing_id);
 
-    if (!$listing || (int) $listing->owner_id !== $owner_id) wp_send_json_error(['message' => 'Listing not found']);
+
+    if (!$listing || (int) $listing->owner_id !== $owner_id) wp_send_json_error(['message' => 'Listing not found.']);
 
     $wpdb->update(BOD_TABLE_LISTINGS, [
         'listing_status' => 'sold',
         'sold_at'        => current_time('mysql'),
-        'active_boost'   => 'none',
     ], ['id' => $listing_id]);
 
-    // Increment sold count
-    $wpdb->query($wpdb->prepare("UPDATE " . BOD_TABLE_OWNERS . " SET total_listings_sold = total_listings_sold + 1 WHERE id = %d", $owner_id));
+    bod_add_notification($owner_id, 'listing', 'Listing marked as sold', 'Your listing has been marked as sold.');
 
-    if ($listing->wp_product_id) {
-        update_post_meta($listing->wp_product_id, '_bod_listing_status', 'sold');
-    }
-
-    wp_send_json_success(['message' => 'Listing marked as sold']);
+    wp_send_json_success(['message' => 'Listing marked as sold.']);
 });

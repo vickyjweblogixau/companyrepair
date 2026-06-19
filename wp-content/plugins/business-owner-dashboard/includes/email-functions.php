@@ -311,6 +311,67 @@ function bod_send_credentials_email($owner_id, $force_new_password = false) {
 }
 
 /**
+ * Send "submission received, pending approval" email to owner after successful payment.
+ * No credentials — account hasn't been created yet.
+ */
+function bod_send_submission_received_email($owner_id, $session = null) {
+    $owner = bod_get_owner($owner_id);
+    if (!$owner) return false;
+
+    $site_name = get_bloginfo('name');
+    $amount    = $session ? number_format(($session->amount_total ?? 0) / 100, 2) : '0.00';
+    $ref       = $session ? ($session->payment_intent ?? ($session->id ?? '')) : '';
+
+    $subject = 'Submission Received – ' . $site_name;
+
+    $body = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:0;background:#f5f5f5;font-family:Arial,sans-serif;">';
+    $body .= '<div style="max-width:600px;margin:40px auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">';
+    $body .= '<div style="background:#2563eb;padding:28px 32px;">';
+    $body .= '<h1 style="color:#fff;margin:0;font-size:22px;">' . esc_html($site_name) . '</h1>';
+    $body .= '</div>';
+    $body .= '<div style="padding:32px;">';
+    $body .= '<h2 style="margin:0 0 8px;font-size:20px;color:#111;">We\'ve received your submission!</h2>';
+    $body .= '<p style="color:#555;margin:0 0 24px;">Hi ' . esc_html($owner->owner_name) . ', thank you for signing up. Your payment has been processed and your submission is now pending review.</p>';
+
+    // Payment summary box
+    $body .= '<div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;padding:20px;margin-bottom:24px;">';
+    $body .= '<table style="width:100%;border-collapse:collapse;">';
+    $body .= '<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;width:140px;">Business Name</td><td style="font-weight:600;font-size:13px;">' . esc_html($owner->business_name ?: '-') . '</td></tr>';
+    $body .= '<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">Email</td><td style="font-size:13px;">' . esc_html($owner->owner_email) . '</td></tr>';
+    $body .= '<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">Amount Paid</td><td style="font-weight:700;font-size:13px;">$' . $amount . ' AUD</td></tr>';
+    if ($ref) $body .= '<tr><td style="padding:6px 0;color:#6b7280;font-size:13px;">Reference</td><td style="font-size:11px;color:#9ca3af;">' . esc_html(substr($ref, 0, 40)) . '</td></tr>';
+    $body .= '</table></div>';
+
+    // Steps
+    $body .= '<h3 style="font-size:15px;margin:0 0 14px;color:#1e3a5f;">What Happens Next?</h3>';
+    $body .= '<div style="display:flex;flex-direction:column;gap:0;">';
+    $steps = [
+        ['1', 'Admin Review', 'Our team will review and verify your business details. This typically takes 1–2 business days.'],
+        ['2', 'Account Created', 'Once approved, your Business Owner account will be created and your login credentials will be sent to this email address.'],
+        ['3', 'Your Business Goes Live', 'Log in to your dashboard, complete your profile and start receiving leads!'],
+    ];
+    foreach ($steps as [$num, $title, $desc]) {
+        $body .= '<div style="display:flex;gap:14px;padding:12px 0;border-bottom:1px solid #f3f4f6;">';
+        $body .= '<div style="width:28px;height:28px;border-radius:50%;background:#2563eb;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;">' . $num . '</div>';
+        $body .= '<div><strong style="font-size:13px;">' . $title . '</strong><br><span style="font-size:12px;color:#6b7280;">' . $desc . '</span></div>';
+        $body .= '</div>';
+    }
+    $body .= '</div>';
+
+    $body .= '<p style="margin:24px 0 0;padding:16px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:13px;color:#78350f;">';
+    $body .= '<strong>⏳ Your account is pending admin approval.</strong> You will receive another email with your login credentials once your submission has been approved.';
+    $body .= '</p>';
+
+    $body .= '<p style="margin-top:24px;font-size:13px;color:#6b7280;">If you have any questions, please reply to this email or contact us at ' . esc_html(get_option('admin_email')) . '</p>';
+    $body .= '</div>';
+    $body .= '<div style="background:#f9f9f9;padding:20px 32px;text-align:center;font-size:12px;color:#999;">&copy; ' . date('Y') . ' ' . esc_html($site_name) . ' | ' . esc_html(home_url()) . '</div>';
+    $body .= '</div></body></html>';
+
+    $headers = ['Content-Type: text/html; charset=UTF-8', 'From: ' . $site_name . ' <' . get_option('admin_email') . '>'];
+    return wp_mail($owner->owner_email, $subject, $body, $headers);
+}
+
+/**
  * Send rejection email to business owner
  */
 function bod_send_rejection_email($owner_id, $reason = '') {

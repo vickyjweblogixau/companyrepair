@@ -240,6 +240,19 @@ function bod_run_db_upgrades() {
     // Placeholder for future column migrations
 }
 
+// Ensure plugin pages exist on every load (fallback if pages were deleted)
+add_action('init', 'bod_ensure_pages_exist', 10);
+function bod_ensure_pages_exist() {
+    $slugs = ['list-your-business', 'business-owner-signup-success', 'business-owner-dashboard', 'business-owner-login'];
+    foreach ($slugs as $slug) {
+        if (!get_page_by_path($slug)) {
+            bod_create_plugin_pages();
+            flush_rewrite_rules();
+            break;
+        }
+    }
+}
+
 // ============================================
 // CREATE PLUGIN PAGES
 // ============================================
@@ -297,6 +310,7 @@ require_once BOD_PLUGIN_DIR . 'includes/admin-pages.php';
 require_once BOD_PLUGIN_DIR . 'includes/admin-settings.php';
 require_once BOD_PLUGIN_DIR . 'includes/ajax-handlers.php';
 require_once BOD_PLUGIN_DIR . 'includes/shortcodes.php';
+require_once BOD_PLUGIN_DIR . 'includes/landing-shortcode.php';
 
 // ============================================
 // INITIALIZE STRIPE
@@ -441,17 +455,4 @@ function bod_register_rest_routes() {
     ]);
 }
 
-// Validate email endpoint
-function bod_rest_validate_email(WP_REST_Request $request) {
-    $email = sanitize_email($request->get_param('email') ?? '');
-    if (!is_email($email)) {
-        return new WP_REST_Response(['valid' => false, 'exists' => false], 200);
-    }
-    $exists = (bool) bod_get_owner_by_email($email);
-    $wp_user_exists = email_exists($email);
-    return new WP_REST_Response([
-        'valid'          => true,
-        'exists'         => $exists,
-        'wp_user_exists' => (bool) $wp_user_exists,
-    ], 200);
-}
+// Val

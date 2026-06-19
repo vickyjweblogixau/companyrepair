@@ -54,7 +54,7 @@ acf_add_local_field_group( [
             'return_format' => 'id',
             'preview_size'  => 'medium',
         ],
-        [
+        /*[
             'key'           => 'field_crs_gallery',
             'name'          => 'crs_gallery',
             'label'         => 'Gallery (featured/premium only)',
@@ -63,6 +63,39 @@ acf_add_local_field_group( [
             'preview_size'  => 'medium',
             'instructions'  => 'Upload up to 8 images. Only visible to featured & premium tiers.',
             'max'           => 8,
+        ], */
+        [
+            'key'           => 'field_crs_gallery_1',
+            'name'          => 'crs_gallery_1',
+            'label'         => 'Gallery Photo 1',
+            'type'          => 'image',
+            'return_format' => 'id',
+            'preview_size'  => 'medium',
+            'instructions'  => 'Only visible to featured & premium tiers.',
+        ],
+        [
+            'key'           => 'field_crs_gallery_2',
+            'name'          => 'crs_gallery_2',
+            'label'         => 'Gallery Photo 2',
+            'type'          => 'image',
+            'return_format' => 'id',
+            'preview_size'  => 'medium',
+        ],
+        [
+            'key'           => 'field_crs_gallery_3',
+            'name'          => 'crs_gallery_3',
+            'label'         => 'Gallery Photo 3',
+            'type'          => 'image',
+            'return_format' => 'id',
+            'preview_size'  => 'medium',
+        ],
+        [
+            'key'           => 'field_crs_gallery_4',
+            'name'          => 'crs_gallery_4',
+            'label'         => 'Gallery Photo 4',
+            'type'          => 'image',
+            'return_format' => 'id',
+            'preview_size'  => 'medium',
         ],
         [
             'key'          => 'field_crs_google_review_url',
@@ -269,12 +302,69 @@ acf_add_local_field_group( [
         ],
     ],
 ] );
+/* ======================================================================
+   Group 3 – Opening Hours  (ACF FREE compatible — flat fields, no repeater)
+   ==================================================================== */
+function crs_build_hours_fields_for_day( $day_key, $day_label ) {
+    return [
+        [
+            'key'   => 'field_crs_hours_' . $day_key . '_open',
+            'name'  => 'crs_hours_' . $day_key . '_open',
+            'label' => $day_label . ' — Open',
+            'type'  => 'time_picker',
+            'display_format' => 'g:i a',
+            'return_format'  => 'H:i',
+            'wrapper' => [ 'width' => 33 ],
+        ],
+        [
+            'key'   => 'field_crs_hours_' . $day_key . '_close',
+            'name'  => 'crs_hours_' . $day_key . '_close',
+            'label' => $day_label . ' — Close',
+            'type'  => 'time_picker',
+            'display_format' => 'g:i a',
+            'return_format'  => 'H:i',
+            'wrapper' => [ 'width' => 33 ],
+        ],
+        [
+            'key'           => 'field_crs_hours_' . $day_key . '_closed',
+            'name'          => 'crs_hours_' . $day_key . '_closed',
+            'label'         => 'Closed?',
+            'type'          => 'true_false',
+            'ui'            => 1,
+            'default_value' => 0,
+            'wrapper'       => [ 'width' => 34 ],
+        ],
+    ];
+}
 
+$crs_days = [
+    'monday'    => 'Monday',
+    'tuesday'   => 'Tuesday',
+    'wednesday' => 'Wednesday',
+    'thursday'  => 'Thursday',
+    'friday'    => 'Friday',
+    'saturday'  => 'Saturday',
+    'sunday'    => 'Sunday',
+];
+
+$crs_hours_fields = [];
+foreach ( $crs_days as $key => $label ) {
+    $crs_hours_fields = array_merge( $crs_hours_fields, crs_build_hours_fields_for_day( $key, $label ) );
+}
+
+acf_add_local_field_group( [
+    'key'      => 'group_crs_opening_hours',
+    'title'    => 'Opening Hours',
+    'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'business' ] ] ],
+    'position' => 'normal',
+    'style'    => 'default',
+    'fields'   => $crs_hours_fields,
+] );
 /* ======================================================================
    Group 3 – Opening Hours  (ACF Repeater, table layout)
    Columns: Day Name | Open Time | Close Time | Leave (or) Holidays
    ==================================================================== */
-acf_add_local_field_group( [
+/* acf_add_local_field_group( [
     'key'      => 'group_crs_opening_hours',
     'title'    => 'Opening Hours',
     'location' => [ [ [ 'param' => 'post_type', 'operator' => '==', 'value' => 'business' ] ] ],
@@ -336,7 +426,7 @@ acf_add_local_field_group( [
             ],
         ],
     ],
-] );
+] );*/
 
 /* ======================================================================
    Group 4 – Subscription

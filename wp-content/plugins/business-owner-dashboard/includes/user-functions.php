@@ -157,6 +157,116 @@ function bod_show_owner_profile_info($user) {
 }
 
 /**
+ * Create a 'business' CPT post (from crs-business-dashboard) when an owner is approved.
+ * Pre-populates ACF fields with signup data and links the post back to the owner record.
+ *
+ * @param int $owner_id  Row ID in wp_business_owners.
+ * @return int|false     New post ID on success, false on failure.
+ */
+function bod_create_business_cpt($owner_id) {
+    $owner = bod_get_owner($owner_id);
+    if (!$owner) return false;
+
+    // Don't create a duplicate if one already exists
+    if (!empty($owner->cpt_post_id) && get_post($owner->cpt_post_id)) {
+        return (int) $owner->cpt_post_id;
+    }
+
+    $title   = !empty($owner->business_name) ? $owner->business_name : $owner->owner_name;
+    $user_id = !empty($owner->wp_user_id) ? (int) $owner->wp_user_id : 0;
+
+    $post_id = wp_insert_post([
+        'post_type'   => 'business',
+        'post_title'  => $title,
+        'post_status' => 'draft',
+        'post_author' => $user_id,
+    ], true);
+
+    if (is_wp_error($post_id)) {
+        error_log('[BOD] Failed to create business CPT for owner #' . $owner_id . ': ' . $post_id->get_error_message());
+        return false;
+    }
+
+    // --- Simple ACF / post-meta fields ---
+    $acf_fields = [
+        'crs_phone'    => $owner->owner_phone,
+        'crs_email'    => $owner->owner_email,
+        'crs_website'  => $owner->website_url,
+        'crs_address'  => $owner->address,
+        'crs_postcode' => $owner->postal_code,
+        'crs_abn'      => $owner->abn,
+    ];
+
+    if (!empty($owner->business_description)) {
+        $acf_fields['crs_description'] = $owner->business_description;
+    }
+
+    foreach ($acf_fields as $field_name => $value) {
+        if (!empty($value)) {
+            if (function_exists('update_field')) {
+                update_field($field_name, $value, $post_id);
+            } else {
+                update_post_meta($post_id, $field_name, $value);
+            }
+        }
+    }
+
+    // --- Taxonomy fields (au-state, au-suburb, au-region) ---
+    // Helper: find a term by name, slug, or term meta abbreviation
+    $find_term = function($taxonomy, $value) {
+        if (empty($value)) return null;
+
+        // Try exact name match
+        $term = get_term_by('name', $value, $taxonomy);
+        if ($term) return $term;
+
+        // Try slug match (lowercase, hyphens)
+        $term = get_term_by('slug', sanitize_title($value), $taxonomy);
+        if ($term) return $term;
+
+        // For au-state: try matching the abbreviation stored in term meta
+        if ($taxonomy === 'au-state') {
+            $terms = get_terms(['taxonomy' => $taxonomy, 'hide_empty' => false]);
+            foreach ($terms as $t) {
+                $abbr = get_term_meta($t->term_id, 'au_state_abbreviation', true);
+                if ($abbr && strtoupper($value) === strtoupper($abbr)) {
+                    return $t;
+                }
+            }
+        }
+
+        return null;
+    };
+
+    $taxonomy_map = [
+        'au-state'  => ['field' => 'crs_state_tax',  'value' => $owner->state],
+        'au-suburb' => ['field' => 'crs_suburb_tax',  'value' => $owner->suburb],
+        'au-region' => ['field' => 'crs_region_tax',  'value' => $owner->region],
+    ];
+
+    foreach ($taxonomy_map as $taxonomy => $cfg) {
+        $term = $find_term($taxonomy, $cfg['value']);
+        if ($term) {
+            wp_set_object_terms($post_id, $term->term_id, $taxonomy);
+            if (function_exists('update_field')) {
+                update_field($cfg['field'], $term->term_id, $post_id);
+            } else {
+                update_post_meta($post_id, $cfg['field'], $term->term_id);
+            }
+        }
+    }
+
+    // Link post back to this owner record
+    update_post_meta($post_id, 'bod_owner_id', $owner_id);
+
+    // Store post ID on the owner row
+    bod_update_owner($owner_id, ['cpt_post_id' => $post_id]);
+
+    error_log('[BOD] Created business CPT post #' . $post_id . ' for owner #' . $owner_id . ' (' . $title . ')');
+    return $post_id;
+}
+
+/**
  * Account delete request handling (mirrors private-sellers-plugin delete flow)
  */
 add_action('wp_ajax_bod_request_account_delete', 'bod_ajax_request_account_delete');
