@@ -61,6 +61,14 @@ add_action( 'admin_init', function () {
     }
 } );
 
+// One-time migration: seed repair-service taxonomy with parent categories
+add_action( 'admin_init', function () {
+    if ( ! get_option( 'crs_repair_service_parents_v1' ) && class_exists( 'CRS_Setup' ) ) {
+        CRS_Setup::insert_default_terms();
+        update_option( 'crs_repair_service_parents_v1', true );
+    }
+} );
+
 function crs_load_plugin() {
     $includes = [
         'inc/class-crs-setup.php',        // CPT, taxonomies, roles, DB
@@ -72,7 +80,6 @@ function crs_load_plugin() {
         'inc/class-crs-admin.php',        // WP Admin menu pages
         'inc/class-crs-ajax.php',         // AJAX handlers
         'inc/class-crs-rewrite.php',      // Custom rewrite rules
-        'inc/class-crs-email.php',    // ← email body function idhula varum
     ];
 
     foreach ( $includes as $file ) {

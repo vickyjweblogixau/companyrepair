@@ -97,6 +97,7 @@ function bod_create_database_tables() {
         state varchar(100) DEFAULT NULL,
 
         stripe_customer_id varchar(100) DEFAULT NULL,
+        stripe_subscription_id varchar(100) DEFAULT NULL,
         stripe_default_payment_method varchar(255) DEFAULT NULL,
 
         wp_user_id bigint(20) DEFAULT NULL,
@@ -237,7 +238,17 @@ function bod_create_database_tables() {
 // Run table upgrades on init (for existing installs)
 add_action('init', 'bod_run_db_upgrades', 5);
 function bod_run_db_upgrades() {
-    // Placeholder for future column migrations
+    global $wpdb;
+
+    // v1.1 — add stripe_subscription_id to owners table
+    if ( ! get_option( 'bod_db_upgrade_subscription_id' ) ) {
+        $table = BOD_TABLE_OWNERS;
+        $col   = $wpdb->get_results( "SHOW COLUMNS FROM `{$table}` LIKE 'stripe_subscription_id'" );
+        if ( empty( $col ) ) {
+            $wpdb->query( "ALTER TABLE `{$table}` ADD COLUMN `stripe_subscription_id` varchar(100) DEFAULT NULL AFTER `stripe_customer_id`" );
+        }
+        update_option( 'bod_db_upgrade_subscription_id', true );
+    }
 }
 
 // Ensure plugin pages exist on every load (fallback if pages were deleted)

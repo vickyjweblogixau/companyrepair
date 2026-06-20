@@ -86,13 +86,13 @@ function bod_create_signup_checkout($owner_data) {
     \Stripe\Stripe::setApiKey($secret_key);
 
     try {
-        $price_id   = BOD_LISTING_PRICE_ID;
-        $tax_rate   = get_option('bod_gst_tax_rate', get_option('cf7_stripe_gst_tax_rate', ''));
+        $price_id    = BOD_LISTING_PRICE_ID;
+        $tax_rate    = get_option('bod_gst_tax_rate', get_option('cf7_stripe_gst_tax_rate', ''));
         $success_url = home_url('/business-owner-signup-success/?session_id={CHECKOUT_SESSION_ID}&type=signup');
         $cancel_url  = home_url('/list-your-business/?cancelled=1');
 
+        // Subscription mode — tax rate goes on subscription_data, not on the line item
         $line_item = ['price' => $price_id, 'quantity' => 1];
-        if ($tax_rate) $line_item['tax_rates'] = [$tax_rate];
 
         $customer = \Stripe\Customer::create([
             'email' => $owner_data['email'],
@@ -109,7 +109,7 @@ function bod_create_signup_checkout($owner_data) {
         $promo_params = [];
         if (!empty($owner_data['promotion_code'])) {
             $promo_params['allow_promotion_codes'] = false;
-            // Validate promo code
+            // Validate promo code and apply as subscription discount
             try {
                 $codes = \Stripe\PromotionCode::all(['code' => $owner_data['promotion_code'], 'active' => true, 'limit' => 1]);
                 if (!empty($codes->data)) {
@@ -122,13 +122,25 @@ function bod_create_signup_checkout($owner_data) {
             $promo_params['allow_promotion_codes'] = true;
         }
 
+        $subscription_data = [
+            'metadata' => [
+                'source'       => 'business_owner_signup',
+                'owner_email'  => $owner_data['email'] ?? '',
+                'business_name'=> $owner_data['business_name'] ?? '',
+            ],
+        ];
+        if ($tax_rate) {
+            $subscription_data['default_tax_rates'] = [$tax_rate];
+        }
+
         $session_params = array_merge([
-            'customer'    => $customer->id,
-            'mode'        => 'payment',
-            'line_items'  => [$line_item],
-            'success_url' => $success_url,
-            'cancel_url'  => $cancel_url,
-            'metadata'    => [
+            'customer'          => $customer->id,
+            'mode'              => 'subscription',
+            'line_items'        => [$line_item],
+            'success_url'       => $success_url,
+            'cancel_url'        => $cancel_url,
+            'subscription_data' => $subscription_data,
+            'metadata'          => [
                 'owner_name'           => $owner_data['name'] ?? '',
                 'owner_email'          => $owner_data['email'] ?? '',
                 'owner_phone'          => $owner_data['phone'] ?? '',
@@ -145,12 +157,6 @@ function bod_create_signup_checkout($owner_data) {
                 'is_signup'            => 'yes',
                 'source'               => 'business_owner_signup',
                 'promotion_code'       => $owner_data['promotion_code'] ?? '',
-            ],
-            'payment_intent_data' => [
-                'metadata' => [
-                    'source'     => 'business_owner_signup',
-                    'owner_email'=> $owner_data['email'] ?? '',
-                ],
             ],
         ], $promo_params);
 
@@ -291,6 +297,14 @@ function bod_handle_stripe_webhook(WP_REST_Request $request) {
         case 'checkout.session.completed':
             bod_webhook_handle_checkout_completed($event->data->object);
             break;
+        case 'customer.subscription.deleted':
+            // Subscription cancelled — mark owner as inactive
+            bod_webhook_handle_subscription_cancelled($event->data->object);
+            break;
+        case 'invoice.payment_failed':
+            // Log failed renewal payment
+            error_log('[BOD Webhook] Invoice payment failed for subscription: ' . ($event->data->object->subscription ?? 'unknown'));
+            break;
         case 'payment_intent.succeeded':
             // handled via checkout.session.completed
             break;
@@ -337,27 +351,36 @@ function bod_webhook_process_signup($session) {
         return;
     }
 
+    $subscription_id = sanitize_text_field($session->subscription ?? '');
+
     $owner = bod_get_owner_by_email($email);
     if (!$owner) {
         // Create owner from metadata
         $owner_data = [
-            'owner_name'    => sanitize_text_field($session->metadata->owner_name ?? ''),
-            'owner_email'   => $email,
-            'owner_phone'   => sanitize_text_field($session->metadata->owner_phone ?? ''),
-            'business_name' => sanitize_text_field($session->metadata->business_name ?? ''),
-            'postal_code'   => sanitize_text_field($session->metadata->postal_code ?? ''),
-            'suburb'        => sanitize_text_field($session->metadata->suburb ?? ''),
-            'state'         => sanitize_text_field($session->metadata->state ?? ''),
-            'region'        => sanitize_text_field($session->metadata->region ?? ''),
-            'stripe_customer_id' => $session->customer ?? '',
+            'owner_name'           => sanitize_text_field($session->metadata->owner_name ?? ''),
+            'owner_email'          => $email,
+            'owner_phone'          => sanitize_text_field($session->metadata->owner_phone ?? ''),
+            'business_name'        => sanitize_text_field($session->metadata->business_name ?? ''),
+            'postal_code'          => sanitize_text_field($session->metadata->postal_code ?? ''),
+            'suburb'               => sanitize_text_field($session->metadata->suburb ?? ''),
+            'state'                => sanitize_text_field($session->metadata->state ?? ''),
+            'region'               => sanitize_text_field($session->metadata->region ?? ''),
+            'stripe_customer_id'      => $session->customer ?? '',
+            'stripe_subscription_id'  => $subscription_id,
         ];
         $owner_id = (int) bod_insert_owner($owner_data);
         $owner    = bod_get_owner($owner_id);
     } else {
         $owner_id = (int) $owner->id;
-        // Update stripe customer id if missing
+        $updates  = [];
         if (empty($owner->stripe_customer_id) && !empty($session->customer)) {
-            bod_update_owner($owner_id, ['stripe_customer_id' => $session->customer]);
+            $updates['stripe_customer_id'] = $session->customer;
+        }
+        if (!empty($subscription_id)) {
+            $updates['stripe_subscription_id'] = $subscription_id;
+        }
+        if (!empty($updates)) {
+            bod_update_owner($owner_id, $updates);
         }
     }
 
@@ -421,6 +444,31 @@ function bod_webhook_process_signup($session) {
         // Account exists, just send invoice
         bod_send_listing_invoice_email($owner_id, $session);
     }
+}
+
+/**
+ * Handle subscription cancellation — mark the owner's subscription as inactive.
+ */
+function bod_webhook_handle_subscription_cancelled($subscription) {
+    global $wpdb;
+
+    $subscription_id = $subscription->id ?? '';
+    if (!$subscription_id) return;
+
+    $owner = $wpdb->get_row($wpdb->prepare(
+        "SELECT * FROM " . BOD_TABLE_OWNERS . " WHERE stripe_subscription_id = %s LIMIT 1",
+        $subscription_id
+    ));
+
+    if (!$owner) {
+        error_log('[BOD Webhook] Subscription cancelled but no owner found for: ' . $subscription_id);
+        return;
+    }
+
+    bod_update_owner((int) $owner->id, ['approval_status' => 'rejected']);
+    bod_add_notification((int) $owner->id, 'subscription', 'Subscription Cancelled', 'Your subscription has been cancelled. Please contact us if you wish to reactivate your listing.');
+
+    error_log('[BOD Webhook] Subscription cancelled for owner #' . $owner->id . ' (' . $owner->owner_email . ')');
 }
 
 function bod_webhook_process_boost($session) {

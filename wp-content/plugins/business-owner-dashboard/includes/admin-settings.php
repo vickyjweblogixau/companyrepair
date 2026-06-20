@@ -108,22 +108,25 @@ function bod_render_settings_page() {
             <!-- PRODUCT PRICE IDs -->
             <!-- =============================== -->
             <h2 class="title">Stripe Product &amp; Price IDs</h2>
-            <p>Create these as <strong>one-time payment</strong> products in your Stripe Dashboard, then paste the Price IDs here.</p>
+            <p>The main listing product must be created as a <strong>recurring / subscription</strong> product in Stripe. Boost products remain one-time payments.</p>
             <table class="form-table">
                 <tr>
-                    <th><label for="bod_listing_price_id">Listing Fee Price ID</label></th>
+                    <th><label for="bod_listing_price_id">Subscription Price ID</label></th>
                     <td>
                         <input type="text" name="bod_listing_price_id" id="bod_listing_price_id"
                                value="<?php echo esc_attr(get_option('bod_listing_price_id')); ?>" class="regular-text" placeholder="price_...">
-                        <p class="description">The Stripe Price ID for the listing fee (one-time payment, e.g. $35 incl. GST).</p>
+                        <p class="description">
+                            Stripe Price ID for the <strong>recurring subscription</strong> (e.g. $20/month incl. GST).<br>
+                            In Stripe → Products, create a product with a <em>recurring</em> price, then paste its <code>price_…</code> ID here.
+                        </p>
                     </td>
                 </tr>
                 <tr>
-                    <th><label for="bod_listing_amount_display">Listing Price (incl. GST)</label></th>
+                    <th><label for="bod_listing_amount_display">Subscription Display Price (incl. GST)</label></th>
                     <td>
                         <input type="number" name="bod_listing_amount_display" id="bod_listing_amount_display" step="0.01" min="0"
-                               value="<?php echo esc_attr(get_option('bod_listing_amount_display', 35)); ?>" class="small-text"> AUD
-                        <p class="description">Display price shown on the signup page (used for display only; actual charge comes from Stripe).</p>
+                               value="<?php echo esc_attr(get_option('bod_listing_amount_display', 20)); ?>" class="small-text"> AUD / month
+                        <p class="description">Price shown on the signup page button (display only — actual charge is set in Stripe).</p>
                     </td>
                 </tr>
 

@@ -68,7 +68,7 @@ class CRS_Setup {
 
         /* --- Repair Service -------------------------------------------- */
         register_taxonomy( 'repair-service', 'business', [
-            'hierarchical'      => false,
+            'hierarchical'      => true,
             'public'            => true,
             'show_admin_column' => true,
             'show_in_rest'      => false,
@@ -246,25 +246,74 @@ class CRS_Setup {
 
     public static function insert_default_terms() {
 
-        // ── Repair Services ───────────────────────────────────────────────
-        $services = [
-            'computer-repairs'   => 'Computer Repairs',
-            'laptop-repairs'     => 'Laptop Repairs',
-            'macbook-repairs'    => 'MacBook Repairs',
-            'data-recovery'      => 'Data Recovery',
-            'virus-removal'      => 'Virus Removal',
-            'printer-repairs'    => 'Printer Repairs',
-            'business-it-support'=> 'Business IT Support',
-            'microsoft-365'      => 'Microsoft 365 Support',
-            'network-support'    => 'Network Support',
-            'server-support'     => 'Server Support',
-            'managed-it-services'=> 'Managed IT Services',
-            'remote-it-support'  => 'Remote IT Support',
+        // ── Repair Services (hierarchical: parent categories + children) ──
+        $service_groups = [
+            'consumer-repair-services' => [
+                'name'     => 'Consumer Repair Services',
+                'children' => [
+                    'computer-repairs'         => 'Computer Repairs',
+                    'laptop-repairs'           => 'Laptop Repairs',
+                    'macbook-repairs'          => 'MacBook Repairs',
+                    'desktop-computer-repairs' => 'Desktop Computer Repairs',
+                    'gaming-pc-repairs'        => 'Gaming PC Repairs',
+                    'data-recovery'            => 'Data Recovery',
+                    'virus-removal'            => 'Virus Removal',
+                    'malware-removal'          => 'Malware Removal',
+                    'printer-repairs'          => 'Printer Repairs',
+                    'printer-setup'            => 'Printer Setup',
+                    'screen-replacement'       => 'Screen Replacement',
+                    'battery-replacement'      => 'Battery Replacement',
+                    'wifi-troubleshooting'     => 'WiFi Troubleshooting',
+                    'software-installation'    => 'Software Installation',
+                    'computer-upgrades'        => 'Computer Upgrades',
+                ],
+            ],
+            'business-it-services' => [
+                'name'     => 'Business IT Services',
+                'children' => [
+                    'business-it-support'       => 'Business IT Support',
+                    'microsoft-365'             => 'Microsoft 365 Support',
+                    'email-support'             => 'Email Support',
+                    'network-support'           => 'Network Support',
+                    'server-support'            => 'Server Support',
+                    'managed-it-services'       => 'Managed IT Services',
+                    'remote-it-support'         => 'Remote IT Support',
+                    'cloud-backup-services'     => 'Cloud Backup Services',
+                    'cyber-security-services'   => 'Cyber Security Services',
+                    'business-wifi-support'     => 'Business WiFi Support',
+                    'it-help-desk-services'     => 'IT Help Desk Services',
+                    'microsoft-teams-support'   => 'Microsoft Teams Support',
+                    'sharepoint-support'        => 'SharePoint Support',
+                    'cloud-migration-services'  => 'Cloud Migration Services',
+                ],
+            ],
         ];
 
-        foreach ( $services as $slug => $name ) {
-            if ( ! term_exists( $slug, 'repair-service' ) ) {
-                wp_insert_term( $name, 'repair-service', [ 'slug' => $slug ] );
+        foreach ( $service_groups as $parent_slug => $group ) {
+            // Insert parent term if not exists, or get existing
+            $parent_term = term_exists( $parent_slug, 'repair-service' );
+            if ( ! $parent_term ) {
+                $parent_term = wp_insert_term( $group['name'], 'repair-service', [ 'slug' => $parent_slug ] );
+            }
+            if ( is_wp_error( $parent_term ) ) {
+                continue;
+            }
+            $parent_id = is_array( $parent_term ) ? (int) $parent_term['term_id'] : (int) $parent_term;
+
+            foreach ( $group['children'] as $slug => $name ) {
+                $existing = get_term_by( 'slug', $slug, 'repair-service' );
+                if ( ! $existing ) {
+                    // New term — insert with parent
+                    wp_insert_term( $name, 'repair-service', [
+                        'slug'   => $slug,
+                        'parent' => $parent_id,
+                    ] );
+                } elseif ( (int) $existing->parent !== $parent_id ) {
+                    // Existing flat term — assign to parent
+                    wp_update_term( $existing->term_id, 'repair-service', [
+                        'parent' => $parent_id,
+                    ] );
+                }
             }
         }
 

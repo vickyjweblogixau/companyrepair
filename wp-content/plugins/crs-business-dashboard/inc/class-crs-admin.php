@@ -492,7 +492,7 @@ class CRS_AU_Region_Fields {
         $count  = isset( $_GET['crs_count'] ) ? (int) $_GET['crs_count'] : 0;
         $errors = isset( $_GET['crs_errors'] ) ? (int) $_GET['crs_errors'] : 0;
         ?>
-        <div class="wrap" style="margin-top:30px;padding:20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;">
+        <div id="crs-region-csv-section" style="margin-top:30px;padding:20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;display:none;">
             <h2 style="margin-top:0;"><?php esc_html_e( 'Import Regions via CSV', 'crs' ); ?></h2>
 
             <?php if ( $result === 'done' ) : ?>
@@ -545,6 +545,17 @@ class CRS_AU_Region_Fields {
                 </a>
             </p>
         </div>
+        <script>
+        document.addEventListener( 'DOMContentLoaded', function () {
+            var section = document.getElementById( 'crs-region-csv-section' );
+            var addForm = document.getElementById( 'addtag' );
+            if ( section && addForm && addForm.parentNode ) {
+                // Move section to just after #addtag — never inside it
+                addForm.parentNode.insertBefore( section, addForm.nextSibling );
+                section.style.display = 'block';
+            }
+        } );
+        </script>
         <?php
     }
 
@@ -704,15 +715,14 @@ class CRS_AU_Suburb_Fields {
         add_filter( 'manage_edit-au-suburb_columns',  [ __CLASS__, 'add_columns'    ] );
         add_filter( 'manage_au-suburb_custom_column', [ __CLASS__, 'render_column'  ], 10, 3 );
 
-        /* --- CSV import section (appended after add form) --- */
-        add_action( 'au-suburb_add_form', [ __CLASS__, 'csv_import_section' ] );
+        /* --- CSV import + export sections — use admin_footer so they render
+               AFTER </form>, preventing fields merging into the add-tag AJAX request --- */
+        add_action( 'admin_footer', [ __CLASS__, 'csv_import_section' ] );
+        add_action( 'admin_footer', [ __CLASS__, 'export_button' ] );
 
         /* --- admin-post handlers --- */
         add_action( 'admin_post_crs_import_suburbs', [ __CLASS__, 'handle_csv_import' ] );
         add_action( 'admin_post_crs_export_suburbs', [ __CLASS__, 'handle_csv_export' ] );
-
-        /* --- Export button on list page --- */
-        add_action( 'au-suburb_add_form', [ __CLASS__, 'export_button' ] );
     }
 
     /* =================================================================
@@ -956,11 +966,15 @@ class CRS_AU_Suburb_Fields {
      *   suburbs_quadrant | description
      */
     public static function csv_import_section() {
+        $screen = get_current_screen();
+        if ( ! $screen || $screen->taxonomy !== 'au-suburb' ) {
+            return;
+        }
         $result = isset( $_GET['crs_suburb_import'] ) ? sanitize_text_field( $_GET['crs_suburb_import'] ) : '';
         $count  = isset( $_GET['crs_count'] )   ? (int) $_GET['crs_count']  : 0;
         $errors = isset( $_GET['crs_errors'] )  ? (int) $_GET['crs_errors'] : 0;
         ?>
-        <div class="wrap" style="margin-top:30px;padding:20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;">
+        <div id="crs-suburb-csv-section" style="margin-top:30px;padding:20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;display:none;">
             <h2 style="margin-top:0;"><?php esc_html_e( 'Import Suburbs via CSV', 'crs' ); ?></h2>
 
             <?php if ( $result === 'done' ) : ?>
@@ -1012,6 +1026,16 @@ class CRS_AU_Suburb_Fields {
                 </a>
             </p>
         </div>
+        <script>
+        document.addEventListener( 'DOMContentLoaded', function () {
+            var section = document.getElementById( 'crs-suburb-csv-section' );
+            var addForm = document.getElementById( 'addtag' );
+            if ( section && addForm && addForm.parentNode ) {
+                addForm.parentNode.insertBefore( section, addForm.nextSibling );
+                section.style.display = 'block';
+            }
+        } );
+        </script>
         <?php
     }
 
@@ -1028,18 +1052,34 @@ class CRS_AU_Suburb_Fields {
     ================================================================= */
 
     public static function export_button() {
+        $screen = get_current_screen();
+        if ( ! $screen || $screen->taxonomy !== 'au-suburb' ) {
+            return;
+        }
         $url = wp_nonce_url(
             admin_url( 'admin-post.php?action=crs_export_suburbs' ),
             'crs_export_suburbs'
         );
         ?>
-        <div class="wrap" style="margin-top:20px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;">
+        <div id="crs-suburb-export-section" style="margin-top:20px;padding:16px 20px;background:#fff;border:1px solid #c3c4c7;border-radius:4px;display:none;">
             <h2 style="margin-top:0;"><?php esc_html_e( 'Export Suburbs', 'crs' ); ?></h2>
             <p style="color:#555;"><?php esc_html_e( 'Download all suburb terms with every field as a CSV file.', 'crs' ); ?></p>
             <a href="<?php echo esc_url( $url ); ?>" class="button button-primary">
                 <?php esc_html_e( '⬇ Export All Suburbs to CSV', 'crs' ); ?>
             </a>
         </div>
+        <script>
+        document.addEventListener( 'DOMContentLoaded', function () {
+            var section = document.getElementById( 'crs-suburb-export-section' );
+            var csvSection = document.getElementById( 'crs-suburb-csv-section' );
+            var addForm = document.getElementById( 'addtag' );
+            var anchor = csvSection || addForm;
+            if ( section && anchor && anchor.parentNode ) {
+                anchor.parentNode.insertBefore( section, anchor.nextSibling );
+                section.style.display = 'block';
+            }
+        } );
+        </script>
         <?php
     }
 

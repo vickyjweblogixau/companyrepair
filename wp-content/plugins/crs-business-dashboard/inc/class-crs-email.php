@@ -9,10 +9,15 @@ defined( 'ABSPATH' ) || exit;
    1. HEADER  — same for every email
    ==================================================================== */
 function crs_email_header() {
-    $logo_url = CRS_PLUGIN_URL . 'assets/images/logo.png'; // adjust path if needed
+    /*$logo_id = get_theme_mod( 'custom_logo' );
+    if ( $logo_id ) {
+        $logo_url = wp_get_attachment_image_url( $logo_id, 'full' );
+    } else {
+        $logo_url = get_template_directory_uri() . '/assets/images/logo-white.png';
+    } */
+    $logo_url = get_template_directory_uri() . '/assets/images/logo-white.png';
     $site_url = home_url( '/' );
-
-    ob_start();
+    ob_start();  
     ?>
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f6f8fc;padding:24px 0;font-family:Arial,sans-serif;">
       <tr>

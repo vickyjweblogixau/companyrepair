@@ -21,39 +21,73 @@ function bod_get_service_radius_options() {
 }
 
 function bod_get_services_list() {
+    // Load dynamically from the repair-service taxonomy (parent = category, children = services)
+    if ( taxonomy_exists( 'repair-service' ) ) {
+        $parent_terms = get_terms( [
+            'taxonomy'   => 'repair-service',
+            'parent'     => 0,
+            'hide_empty' => false,
+            'orderby'    => 'term_id',
+            'order'      => 'ASC',
+        ] );
+
+        if ( ! is_wp_error( $parent_terms ) && ! empty( $parent_terms ) ) {
+            $services = [];
+            foreach ( $parent_terms as $parent ) {
+                $children = get_terms( [
+                    'taxonomy'   => 'repair-service',
+                    'parent'     => $parent->term_id,
+                    'hide_empty' => false,
+                    'orderby'    => 'name',
+                    'order'      => 'ASC',
+                ] );
+                if ( ! is_wp_error( $children ) && ! empty( $children ) ) {
+                    $services[ $parent->name ] = [];
+                    foreach ( $children as $child ) {
+                        $services[ $parent->name ][ $child->slug ] = $child->name;
+                    }
+                }
+            }
+            if ( ! empty( $services ) ) {
+                return $services;
+            }
+        }
+    }
+
+    // Fallback: hardcoded list used before taxonomy is seeded
     return [
         'Consumer Repair Services' => [
-            'computer_repairs'     => 'Computer Repairs',
-            'laptop_repairs'       => 'Laptop Repairs',
-            'macbook_repairs'      => 'Macbook Repairs',
-            'desktop_repairs'      => 'Desktop Computer Repairs',
-            'gaming_pc_repairs'    => 'Gaming PC Repairs',
-            'data_recovery'        => 'Data Recovery',
-            'virus_removal'        => 'Virus Removal',
-            'malware_removal'      => 'Malware Removal',
-            'printer_repairs'      => 'Printer Repairs',
-            'printer_setup'        => 'Printer Setup',
-            'screen_replacement'   => 'Screen Replacement',
-            'battery_replacement'  => 'Battery Replacement',
-            'wifi_troubleshooting' => 'WiFi Troubleshooting',
-            'software_installation'=> 'Software Installation',
-            'computer_upgrades'    => 'Computer Upgrades',
+            'computer-repairs'         => 'Computer Repairs',
+            'laptop-repairs'           => 'Laptop Repairs',
+            'macbook-repairs'          => 'MacBook Repairs',
+            'desktop-computer-repairs' => 'Desktop Computer Repairs',
+            'gaming-pc-repairs'        => 'Gaming PC Repairs',
+            'data-recovery'            => 'Data Recovery',
+            'virus-removal'            => 'Virus Removal',
+            'malware-removal'          => 'Malware Removal',
+            'printer-repairs'          => 'Printer Repairs',
+            'printer-setup'            => 'Printer Setup',
+            'screen-replacement'       => 'Screen Replacement',
+            'battery-replacement'      => 'Battery Replacement',
+            'wifi-troubleshooting'     => 'WiFi Troubleshooting',
+            'software-installation'    => 'Software Installation',
+            'computer-upgrades'        => 'Computer Upgrades',
         ],
         'Business IT Services' => [
-            'business_it_support'  => 'Business IT Support',
-            'microsoft_365'        => 'Microsoft 365 Support',
-            'email_support'        => 'Email Support',
-            'network_support'      => 'Network Support',
-            'server_support'       => 'Server Support',
-            'managed_it'           => 'Managed IT Services',
-            'remote_it_support'    => 'Remote IT Support',
-            'cloud_backup'         => 'Cloud Backup Services',
-            'cyber_security'       => 'Cyber Security Services',
-            'business_wifi'        => 'Business WiFi Support',
-            'it_helpdesk'          => 'IT Help Desk Services',
-            'ms_teams_support'     => 'Microsoft Teams Support',
-            'sharepoint_support'   => 'SharePoint Support',
-            'cloud_migration'      => 'Cloud Migration Services',
+            'business-it-support'      => 'Business IT Support',
+            'microsoft-365'            => 'Microsoft 365 Support',
+            'email-support'            => 'Email Support',
+            'network-support'          => 'Network Support',
+            'server-support'           => 'Server Support',
+            'managed-it-services'      => 'Managed IT Services',
+            'remote-it-support'        => 'Remote IT Support',
+            'cloud-backup-services'    => 'Cloud Backup Services',
+            'cyber-security-services'  => 'Cyber Security Services',
+            'business-wifi-support'    => 'Business WiFi Support',
+            'it-help-desk-services'    => 'IT Help Desk Services',
+            'microsoft-teams-support'  => 'Microsoft Teams Support',
+            'sharepoint-support'       => 'SharePoint Support',
+            'cloud-migration-services' => 'Cloud Migration Services',
         ],
     ];
 }
@@ -239,23 +273,38 @@ function bod_render_signup_form($atts) {
                   </div>
                 </div>
 
-                <!-- Postcode / Suburb / State (auto-fill) -->
+                <!-- Postcode / Suburb / Region / State (auto-filled from au-suburb taxonomy) -->
                 <div class="su-field">
                   <div class="su-field-ico"><i class="fa-solid fa-location-dot"></i></div>
                   <div class="su-field-body">
-                    <label class="su-label">Postcode <span class="req">*</span></label>
-                    <input type="text" name="postal_code" id="bod-postcode" class="su-input" maxlength="4" pattern="[0-9]{4}" required placeholder="e.g. 3000" style="max-width:160px;">
-                    <div style="display:flex;gap:12px;margin-top:10px;">
-                      <div style="flex:1;">
-                        <label class="su-label">Suburb</label>
-                        <input type="text" name="suburb" id="bod-suburb" class="su-input" readonly style="background:#f8fafd;">
+
+                    <!-- Row 1: Postcode + Suburb on same line -->
+                    <div style="display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;">
+                      <div style="flex:0 0 150px;min-width:120px;">
+                        <label class="su-label">Postcode <span class="req">*</span></label>
+                        <input type="text" name="postal_code" id="bod-postcode" class="su-input" maxlength="4" pattern="[0-9]{4}" required placeholder="e.g. 3000">
+                        <div id="bod-postcode-status" style="font-size:12px;color:var(--crs-muted);margin-top:3px;min-height:16px;"></div>
                       </div>
-                      <div style="flex:1;">
-                        <label class="su-label">State</label>
-                        <input type="text" name="state" id="bod-state" class="su-input" readonly style="background:#f8fafd;">
+                      <div style="flex:1;min-width:160px;">
+                        <label class="su-label">Suburb <span class="req">*</span></label>
+                        <select id="bod-suburb" name="suburb" class="su-select" disabled required>
+                          <option value="">— enter postcode first —</option>
+                        </select>
                       </div>
                     </div>
-                    <input type="hidden" name="region" id="bod-region">
+
+                    <!-- Row 2: Region + State on same line -->
+                    <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;">
+                      <div style="flex:1;min-width:140px;">
+                        <label class="su-label">Region</label>
+                        <input type="text" name="region" id="bod-region" class="su-input" readonly placeholder="Auto-filled" style="background:#f8fafd;">
+                      </div>
+                      <div style="flex:1;min-width:140px;">
+                        <label class="su-label">State</label>
+                        <input type="text" name="state" id="bod-state" class="su-input" readonly placeholder="Auto-filled" style="background:#f8fafd;">
+                      </div>
+                    </div>
+
                   </div>
                 </div>
 
@@ -401,26 +450,73 @@ function bod_render_signup_form($atts) {
             $('#bod-desc-count').text(this.value.length);
         });
 
+        // ── Postcode → suburb cascade (reads local au-suburb taxonomy) ──
         var postcodeTimer;
+
+        function resetSuburbFields() {
+            $('#bod-suburb')
+                .html('<option value="">— enter postcode first —</option>')
+                .prop('disabled', true);
+            $('#bod-region').val('');
+            $('#bod-state').val('');
+            $('#bod-postcode-status').text('');
+        }
+
         $('#bod-postcode').on('input', function() {
             var pc = $(this).val().trim();
-            $('#bod-suburb, #bod-state').val('');
-            $('#bod-region').val('');
-            if (pc.length === 4 && /^\d{4}$/.test(pc)) {
-                clearTimeout(postcodeTimer);
-                postcodeTimer = setTimeout(function() {
-                    $.getJSON(
-                        'https://www.admin.caravansforsale.com.au/wp-json/locations/v1/postcode/' + pc,
-                        function(data) {
-                            if (data && data.suburb) {
-                                $('#bod-suburb').val(data.suburb);
-                                $('#bod-state').val(data.state || '');
-                                $('#bod-region').val(data.region || '');
-                            }
-                        }
-                    );
-                }, 500);
-            }
+            resetSuburbFields();
+            if (pc.length !== 4 || !/^\d{4}$/.test(pc)) return;
+
+            clearTimeout(postcodeTimer);
+            $('#bod-postcode-status').text('Looking up…');
+
+            postcodeTimer = setTimeout(function() {
+                $.getJSON('<?php echo esc_url( admin_url( 'admin-ajax.php' ) ); ?>', {
+                    action:   'crs_get_suburbs_by_postcode',
+                    postcode: pc,
+                })
+                .done(function(res) {
+                    $('#bod-postcode-status').text('');
+                    var suburbs = (res.success && res.data.suburbs) ? res.data.suburbs : [];
+
+                    if (suburbs.length === 0) {
+                        $('#bod-suburb').html('<option value="">No suburbs found</option>');
+                        $('#bod-postcode-status').text('No suburbs found for this postcode.');
+                        return;
+                    }
+
+                    if (suburbs.length === 1) {
+                        // Single suburb — auto-fill everything
+                        var s = suburbs[0];
+                        $('#bod-suburb')
+                            .html('<option value="' + $('<span>').text(s.name).html() + '" selected>' + $('<span>').text(s.name).html() + '</option>')
+                            .prop('disabled', false);
+                        $('#bod-region').val(s.region);
+                        $('#bod-state').val(s.state);
+                    } else {
+                        // Multiple suburbs — let user choose, then fill region + state
+                        var opts = '<option value="">Select suburb…</option>';
+                        $.each(suburbs, function(i, s) {
+                            opts += '<option value="' + $('<span>').text(s.name).html() + '"'
+                                  + ' data-region="' + $('<span>').text(s.region).html() + '"'
+                                  + ' data-state="'  + $('<span>').text(s.state).html()  + '">'
+                                  + $('<span>').text(s.name).html()
+                                  + '</option>';
+                        });
+                        $('#bod-suburb').html(opts).prop('disabled', false);
+                    }
+                })
+                .fail(function() {
+                    $('#bod-postcode-status').text('Could not look up postcode. Please try again.');
+                });
+            }, 500);
+        });
+
+        // When a suburb is chosen from the dropdown, fill Region + State
+        $('#bod-suburb').on('change', function() {
+            var $opt = $(this).find('option:selected');
+            $('#bod-region').val($opt.data('region') || '');
+            $('#bod-state').val($opt.data('state')  || '');
         });
 
         $('#bod-signup-form').on('submit', function(e) {

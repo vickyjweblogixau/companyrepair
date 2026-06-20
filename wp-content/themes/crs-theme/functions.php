@@ -71,9 +71,12 @@ add_action('wpcf7_init', function () {
         return $html;
     });
 });
-add_action( 'wpcf7_before_send_mail', 'crs_save_cf7_enquiry_to_db' );
-function crs_save_cf7_enquiry_to_db( $contact_form ) {
+add_action( 'wpcf7_submit', 'crs_save_cf7_enquiry_to_db', 10, 2 );
+function crs_save_cf7_enquiry_to_db( $contact_form, $result ) {
     if ( $contact_form->id() != '69' ) {
+        return;
+    }
+    if ( in_array( $result['status'], [ 'spam', 'validation_failed', 'aborted' ], true ) ) {
         return;
     }
     $submission = WPCF7_Submission::get_instance();
@@ -85,25 +88,23 @@ function crs_save_cf7_enquiry_to_db( $contact_form ) {
     $table = $wpdb->prefix . 'crs_enquiries';
     $business_id = absint( $posted['business_id'] ?? 0 );
     if ( ! $business_id || get_post_type( $business_id ) !== 'business' ) {
-        return; // don't insert broken data
+        return;
     }
     $wpdb->insert(
         $table,
         [
-            'business_id'   => $business_id,
-            'name'          => sanitize_text_field( $posted['your-name']    ?? '' ),
-            'email'         => sanitize_email( $posted['your-email']        ?? '' ),
-            'phone'         => sanitize_text_field( $posted['your-phone']   ?? '' ),
-            'postcode'      => sanitize_text_field( $posted['your-postcode']?? '' ),
-            'service'       => sanitize_text_field( $posted['service']      ?? '' ),
-            'subject'       => sanitize_text_field( $posted['your-subject']?? '' ),
-            'message'       => sanitize_textarea_field( $posted['your-message'] ?? '' ),
-        //    'finance_quote' => ! empty( $posted['finance-quote'] ) ? 1 : 0,
-            'finance_amount'       => sanitize_textarea_field( $posted['finance_amount'] ?? '' ),
-            'status'        => 'new',
-            'created_at'    => current_time( 'mysql' ),
-        ],
-        [ '%d','%s','%s','%s','%s','%s','%s','%s','%d','%s','%s' ]
+            'business_id'    => $business_id,
+            'name'           => sanitize_text_field( $posted['your-name']     ?? '' ),
+            'email'          => sanitize_email( $posted['your-email']         ?? '' ),
+            'phone'          => sanitize_text_field( $posted['your-phone']    ?? '' ),
+            'postcode'       => sanitize_text_field( $posted['your-postcode']?? '' ),
+            'service'        => sanitize_text_field( $posted['service']       ?? '' ),
+            'subject'        => sanitize_text_field( $posted['your-subject']?? '' ),
+            'message'        => sanitize_textarea_field( $posted['your-message'] ?? '' ),
+            'finance_amount' => sanitize_text_field( $posted['finance_amount'] ?? '' ),
+            'status'         => 'new',
+            'created_at'     => current_time( 'mysql' ),
+        ]
     );
     $enquiry_id = $wpdb->insert_id;
     do_action( 'crs_enquiry_submitted', $enquiry_id, $business_id );

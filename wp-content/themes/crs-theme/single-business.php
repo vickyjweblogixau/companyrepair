@@ -430,8 +430,13 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
         <div class="bp-card bp-quote">
               <h3 class="bp-side-title"><i class="fa-solid fa-file-lines"></i> Get a Free Quote</h3>
               <p>Fill out the form and ABC Computers will get back to you shortly.</p>
-              <button type="button" class="bp-quote-btn" data-business-id="<?php echo get_the_ID(); ?>" data-bs-target="#enquiryModal"><i class="fa-solid fa-paper-plane me-2"></i>Request a
-                Quote</button>
+              <button type="button"
+                  class="bp-quote-btn"
+                  data-business-id="<?php echo get_the_ID(); ?>"
+                  data-bs-toggle="modal"
+                  data-bs-target="#enquiryModal">
+                  Request a Quote
+              </button>
             </div>
       </div><!-- /bp-sticky -->
     </div><!-- /sidebar -->
