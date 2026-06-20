@@ -51,21 +51,21 @@ function my_theme_scripts() {
 }
 add_filter('wpcf7_autop_or_not', '__return_false');
 add_action('wp_enqueue_scripts', 'my_theme_scripts');
-// Contact form service
+// Contact Form 7 - Show only current repair service on single page
 add_action('wpcf7_init', function () {
     wpcf7_add_form_tag('repair_services', function () {
-        $terms = get_terms([
-            'taxonomy'   => 'repair-service',
-            'hide_empty' => false,
-        ]);
         $html = '<select name="service" class="cs-control">';
-        $html .= '<option value="">Select Service</option>';
-        foreach ($terms as $term) {
-            $html .= sprintf(
-                '<option value="%s">%s</option>',
-                esc_attr($term->name),
-                esc_html($term->name)
-            );
+        $terms = get_the_terms(get_the_ID(), 'repair-service');
+        if (!empty($terms) && !is_wp_error($terms)) {
+            foreach ($terms as $term) {
+                $html .= sprintf(
+                    '<option value="%s" selected>%s</option>',
+                    esc_attr($term->name),
+                    esc_html($term->name)
+                );
+            }
+        } else {
+            $html .= '<option value="">Select Service</option>';
         }
         $html .= '</select>';
         return $html;

@@ -356,3 +356,19 @@ Stack trace:
 #1 /home/customer/www/computerrepairservices.com.au/public_html/wp-admin/post-new.php(75): require('/home/customer/...')
 #2 {main}
   thrown in /home/customer/www/computerrepairservices.com.au/public_html/wp-admin/includes/template.php on line 1458
+[20-Jun-2026 04:58:13 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:58:26 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:58:28 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:58:42 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:59:16 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:59:34 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:59:40 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:59:40 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 04:59:42 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 05:00:33 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 05:00:34 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 05:00:43 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 05:00:46 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 05:00:56 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 05:01:12 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94
+[20-Jun-2026 05:01:33 UTC] PHP Warning:  Constant WP_DEBUG already defined in /home/customer/www/computerrepairservices.com.au/public_html/wp-config.php on line 94

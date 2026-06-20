@@ -70,11 +70,6 @@ define( 'WP_CACHE_KEY_SALT', '6Gt;=x34*LM]OTu;;`/7#q-:UdL B>haqDvV,O=AUz$74lo-}J
  */
 $table_prefix = 'wow_';
 
-// Debugging
-define('WP_DEBUG', true);
-define('WP_DEBUG_LOG', true);
-define('WP_DEBUG_DISPLAY', true);
-
 /* Add any custom values between this line and the "stop editing" line. */
 
 
@@ -94,6 +89,11 @@ define('WP_DEBUG_DISPLAY', true);
 if ( ! defined( 'WP_DEBUG' ) ) {
 	define( 'WP_DEBUG', false );
 }
+
+// Debugging
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+define('WP_DEBUG_DISPLAY', true);
 
 /* That's all, stop editing! Happy publishing. */
 
