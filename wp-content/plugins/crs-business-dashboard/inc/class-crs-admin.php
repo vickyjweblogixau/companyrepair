@@ -371,8 +371,9 @@ class CRS_AU_Region_Fields {
         add_filter( 'manage_edit-au-region_columns',     [ __CLASS__, 'add_column'    ] );
         add_filter( 'manage_au-region_custom_column',    [ __CLASS__, 'render_column' ], 10, 3 );
 
-        // CSV importer section (appended after the add form)
-        add_action( 'au-region_add_form', [ __CLASS__, 'csv_import_section' ] );
+        // CSV importer section — uses admin_footer so it renders AFTER </form>,
+        // preventing its fields from being merged into the add-tag AJAX request.
+        add_action( 'admin_footer', [ __CLASS__, 'csv_import_section' ] );
 
         // Handle CSV upload
         add_action( 'admin_post_crs_import_regions', [ __CLASS__, 'handle_csv_import' ] );
@@ -482,6 +483,11 @@ class CRS_AU_Region_Fields {
      *   Inner Melbourne,inner-melbourne,victoria,greater-melbourne,Inner suburbs of Melbourne
      */
     public static function csv_import_section() {
+        // Only render on the au-region taxonomy admin page.
+        $screen = get_current_screen();
+        if ( ! $screen || $screen->taxonomy !== 'au-region' ) {
+            return;
+        }
         $result = isset( $_GET['crs_import'] ) ? sanitize_text_field( $_GET['crs_import'] ) : '';
         $count  = isset( $_GET['crs_count'] ) ? (int) $_GET['crs_count'] : 0;
         $errors = isset( $_GET['crs_errors'] ) ? (int) $_GET['crs_errors'] : 0;
