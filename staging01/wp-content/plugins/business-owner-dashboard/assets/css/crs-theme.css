@@ -1,0 +1,155 @@
+/**
+ * CRS Theme Overrides — Business Owner Dashboard
+ * Overrides the teal private-seller-dashboard palette with CRS orange
+ */
+
+/* ── CSS Variable Overrides ─────────────────────────────────────────── */
+:root {
+    --primary:       10, 38, 71;      /* #0a2647  navy      */
+    --primary-dark:  234, 88,  12;   /* #1565d8  orange-600 */
+    --primary-light: 255, 237, 213;  /* #ffedd5  orange-100 */
+    --accent:        249, 115, 22;
+}
+
+/* ── Sidebar & Navigation ────────────────────────────────────────────── */
+.sidebar {
+    background: #1a1a2e !important;
+}
+
+.nav-item a.active,
+.nav-item a:hover,
+.sidebar-nav .active > a,
+.sidebar-nav a:hover {
+    background: rgba(249, 115, 22, 0.15) !important;
+    color: #0a2647 !important;
+    border-left-color: #0a2647 !important;
+}
+
+.sidebar-brand,
+.sidebar .brand-name {
+    color: #0a2647 !important;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.btn-primary,
+.btn.btn-primary {
+    background: #0a2647 !important;
+    border-color: #0a2647 !important;
+    color: #fff !important;
+}
+
+.btn-primary:hover,
+.btn.btn-primary:hover {
+    background: #1565d8 !important;
+    border-color: #1565d8 !important;
+}
+
+.btn-outline-primary,
+.btn.btn-outline-primary {
+    border-color: #0a2647 !important;
+    color: #0a2647 !important;
+}
+
+.btn-outline-primary:hover,
+.btn.btn-outline-primary:hover {
+    background: #0a2647 !important;
+    color: #fff !important;
+}
+
+/* ── Links ───────────────────────────────────────────────────────────── */
+a.text-primary,
+.text-primary {
+    color: #0a2647 !important;
+}
+
+/* ── Form Focus States ───────────────────────────────────────────────── */
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #0a2647 !important;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15) !important;
+    outline: none;
+}
+
+/* ── Badges & Status Pills ───────────────────────────────────────────── */
+.badge-primary,
+.badge.bg-primary {
+    background: #0a2647 !important;
+    color: #fff !important;
+}
+
+/* ── Cards & Highlights ──────────────────────────────────────────────── */
+.card-primary-border {
+    border-top: 3px solid #0a2647;
+}
+
+.highlight-orange {
+    color: #0a2647;
+}
+
+.bg-orange-soft {
+    background: #fff7ed;
+    color: #0a2647;
+}
+
+/* ── Topbar ──────────────────────────────────────────────────────────── */
+.topbar-add-btn,
+.topbar .btn-primary {
+    background: #0a2647 !important;
+    border-color: #0a2647 !important;
+}
+
+/* ── Listing Credit Counter ──────────────────────────────────────────── */
+.listing-credit-count {
+    color: #0a2647;
+    font-weight: 700;
+}
+
+.listing-credit-badge {
+    background: rgba(249, 115, 22, 0.15);
+    color: #0a2647;
+    border-radius: 12px;
+    padding: 2px 10px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+/* ── Pagination ──────────────────────────────────────────────────────── */
+.page-item.active .page-link {
+    background: #0a2647 !important;
+    border-color: #0a2647 !important;
+}
+
+.page-link {
+    color: #0a2647 !important;
+}
+
+/* ── Alerts ──────────────────────────────────────────────────────────── */
+.alert-primary {
+    background: #fff7ed;
+    border-color: #fed7aa;
+    color: #9a3412;
+}
+
+/* ── Progress Bars ───────────────────────────────────────────────────── */
+.progress-bar {
+    background: #0a2647 !important;
+}
+
+/* ── Tables ──────────────────────────────────────────────────────────── */
+.table thead th {
+    border-bottom-color: #0a2647;
+}
+
+/* ── Scrollbar (webkit) ──────────────────────────────────────────────── */
+.sidebar::-webkit-scrollbar-thumb,
+.page-content::-webkit-scrollbar-thumb {
+    background: rgba(249, 115, 22, 0.4);
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .sidebar-toggle-btn {
+        color: #0a2647 !important;
+    }
+}

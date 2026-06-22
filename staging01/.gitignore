@@ -1,0 +1,32 @@
+# WordPress core (if you're not tracking WP core itself)
+wp-admin/
+wp-includes/
+wp-*.php
+xmlrpc.php
+index.php
+
+# Uploads & generated content
+wp-content/uploads/
+wp-content/cache/
+wp-content/upgrade/
+wp-content/backup*/
+wp-content/debug.log
+
+# Third-party plugins — NOT your custom ones
+wp-content/plugins/*
+!wp-content/plugins/crs-business-dashboard/
+!wp-content/plugins/business-owner-dashboard/
+
+# Third-party themes — keep only your custom theme
+wp-content/themes/*
+!wp-content/themes/crs-theme/
+
+# Config / secrets
+wp-config.php
+.env
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
