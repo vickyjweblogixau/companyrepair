@@ -119,11 +119,11 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                 </a>
               <?php endif; */ ?>
               <?php //if ( in_array( $tier, [ 'standard', 'featured', 'premium' ], true ) ) : ?>
-                 <a href="#" class="bp-btn bp-btn-primary" data-business-id="<?php echo get_the_ID(); ?>"
-                  data-bs-toggle="modal" data-bs-target="#enquiryModal"><i
-                      class="fa-solid fa-envelope"></i> Enquire Now</a>
+                <a href="<?php echo esc_url( home_url( '/enquire/' . $post->post_name . '/' ) ); ?>"
+                  class="bp-btn bp-btn-primary">
+                    <i class="fa-solid fa-envelope"></i> Enquire Now
                 </a>
-              <?php //endif; ?>
+                              <?php //endif; ?>
               <?php if ( $website ) : ?>
                 <a href="<?php echo esc_url( $website ); ?>"
                    class="bp-btn bp-btn-ghost"
@@ -466,13 +466,10 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
         <div class="bp-card bp-quote">
               <h3 class="bp-side-title"><i class="fa-solid fa-file-lines"></i> Get a Free Quote</h3>
               <p>Fill out the form and ABC Computers will get back to you shortly.</p>
-              <button type="button"
-                  class="bp-quote-btn"
-                  data-business-id="<?php echo get_the_ID(); ?>"
-                  data-bs-toggle="modal"
-                  data-bs-target="#enquiryModal">
-                  Request a Quote
-              </button>
+             <a href="<?php echo esc_url( home_url( '/enquire/' . get_post_field( 'post_name', get_the_ID() ) . '/' ) ); ?>"
+                class="sp-btn-enquiry">
+                  <?php esc_html_e( 'Enquiry Now', 'crs' ); ?>
+              </a>
             </div>
       </div><!-- /bp-sticky -->
     </div><!-- /sidebar -->
