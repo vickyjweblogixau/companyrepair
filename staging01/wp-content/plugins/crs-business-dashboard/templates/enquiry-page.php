@@ -1,5 +1,6 @@
 <?php
 defined( 'ABSPATH' ) || exit;
+global $post;
 
 // ── Get business from URL slug ──────────────────────────────────
 $business_slug = sanitize_text_field( get_query_var( 'crs_business_slug' ) );
@@ -9,8 +10,9 @@ if ( ! $business ) {
     wp_redirect( home_url( '/' ) );
     exit;
 }
+$post_id = $post->ID;
 
-$post_id       = $business->ID;
+//$post_id       = $business->ID;
 $logo_id       = get_field( 'crs_logo',           $post_id );
 $phone         = get_field( 'crs_phone',           $post_id );
 $mobile        = get_field( 'crs_mobile',          $post_id ); // add if you have this field
@@ -33,7 +35,7 @@ $logo_url = $logo_id
     ? wp_get_attachment_image_url( $logo_id, 'thumbnail' )
     : CRS_URI . '/assets/images/logo-placeholder.png';
 
-$business_name = $business->post_title;
+$business_name = $post->post_title;
 
 // ── Opening hours for sidebar ───────────────────────────────────
 $days_map = [
