@@ -134,6 +134,6 @@ textarea.cs-control {
 document.addEventListener('wpcf7mailsent', function () {
     setTimeout(function () {
         location.reload();
-    }, 2000);
+    }, 500);
 }, false);
 </script>

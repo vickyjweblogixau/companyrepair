@@ -5,13 +5,10 @@
  *
  * Loads all inc/ files and registers theme features.
  */
-
 defined( 'ABSPATH' ) || exit;
-
 define( 'CRS_VERSION', '1.0.0' );
 define( 'CRS_DIR',     get_template_directory() );
 define( 'CRS_URI',     get_template_directory_uri() );
-
 /* --------------------------------------------------------------------------
  * Load includes
  * ---------------------------------------------------------------------- */
@@ -21,12 +18,10 @@ require_once CRS_DIR . '/inc/template-helpers.php';
 require_once CRS_DIR . '/inc/breadcrumbs.php';
 // New Role
 add_action( 'after_switch_theme', 'create_business_owner_role' );
-
 function create_business_owner_role() {
     if ( get_role( 'business_owner' ) ) {
         return; // Already exists, skip
     }
-
     $capabilities = [
         'read'                   => true,
         'edit_posts'             => true,
@@ -36,7 +31,6 @@ function create_business_owner_role() {
         'publish_posts'          => true,
         'upload_files'           => true,
     ];
-
     add_role(
         'business_owner',
         'Business Owner',
@@ -57,12 +51,44 @@ add_action('wpcf7_init', function () {
         $html = '<select name="service" class="cs-control">';
         $terms = get_the_terms(get_the_ID(), 'repair-service');
         if (!empty($terms) && !is_wp_error($terms)) {
+            $grouped = [];
             foreach ($terms as $term) {
-                $html .= sprintf(
-                    '<option value="%s" selected>%s</option>',
-                    esc_attr($term->name),
-                    esc_html($term->name)
-                );
+                if ($term->parent) {
+                    $ancestors = get_ancestors($term->term_id, 'repair-service');
+                    $parent = get_term(end($ancestors), 'repair-service');
+                } else {
+                    $parent = $term;
+                }
+                if (!isset($grouped[$parent->term_id])) {
+                    $grouped[$parent->term_id] = [
+                        'parent'   => $parent,
+                        'children' => [],
+                    ];
+                }
+                if ($term->term_id != $parent->term_id) {
+                    $grouped[$parent->term_id]['children'][] = $term;
+                }
+            }
+            foreach ($grouped as $group) {
+                // If parent has child services
+                if (!empty($group['children'])) {
+                    $html .= '<optgroup label="' . esc_attr($group['parent']->name) . '">';
+                    foreach ($group['children'] as $child) {
+                        $html .= sprintf(
+                            '<option value="%s">%s</option>',
+                            esc_attr($child->name),
+                            esc_html($child->name)
+                        );
+                    }
+                    $html .= '</optgroup>';
+                } else {
+                    // Parent service only
+                    $html .= sprintf(
+                        '<option value="%s">%s</option>',
+                        esc_attr($group['parent']->name),
+                        esc_html($group['parent']->name)
+                    );
+                }
             }
         } else {
             $html .= '<option value="">Select Service</option>';

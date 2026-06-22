@@ -119,7 +119,9 @@ function bod_render_owners_list() {
                 <?php
                 $from = (($paged - 1) * 20) + 1;
                 $to   = min($paged * 20, $total);
-                echo $total > 0 ? "Showing $from–$to of $total owners" : 'No results';
+                echo $total > 0
+                    ? 'Showing ' . $from . '–' . $to . ' of ' . $total . ' owners'
+                    : 'No results';       
                 ?>
             </span>
             <?php if ($total_pages > 1) :

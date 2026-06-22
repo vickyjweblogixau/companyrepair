@@ -112,12 +112,12 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
             </div>
             <!-- Action buttons -->
             <div class="bp-actions">
-              <?php if ( $phone ) : ?>
+              <?php /* if ( $phone ) : ?>
                 <a href="tel:<?php echo esc_attr( preg_replace( '/\D/', '', $phone ) ); ?>"
                    class="bp-btn bp-btn-primary">
                   <i class="fa-solid fa-phone"></i><?php echo esc_html( $phone ); ?>
                 </a>
-              <?php endif; ?>
+              <?php endif; */ ?>
               <?php //if ( in_array( $tier, [ 'standard', 'featured', 'premium' ], true ) ) : ?>
                  <a href="#" class="bp-btn bp-btn-primary" data-business-id="<?php echo get_the_ID(); ?>"
                   data-bs-toggle="modal" data-bs-target="#enquiryModal"><i
@@ -175,14 +175,50 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                 <div class="col-lg-3">
                     <h2 class="bp-h">Services Offered</h2>
                     <?php if ($services && !is_wp_error($services)) : ?>
-                        <ul class="bp-list check">
-                            <?php foreach ($services as $svc) : ?>
-                                <li>
-                                    <i class="fa-solid fa-check"></i>
-                                    <?php echo esc_html($svc->name); ?>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
+
+                        <?php
+                        $grouped = [];
+
+                        foreach ($services as $service) {
+
+                            // Find top-level parent
+                            if ($service->parent) {
+                                $ancestors = get_ancestors($service->term_id, 'repair-service');
+                                $parent_id = end($ancestors);
+                                $parent = get_term($parent_id, 'repair-service');
+                            } else {
+                                $parent = $service;
+                            }
+
+                            if (!isset($grouped[$parent->term_id])) {
+                                $grouped[$parent->term_id] = [
+                                    'parent' => $parent,
+                                    'children' => [],
+                                ];
+                            }
+
+                            if ($service->term_id != $parent->term_id) {
+                                $grouped[$parent->term_id]['children'][] = $service;
+                            }
+                        }
+                        ?>
+
+                        <?php foreach ($grouped as $group) : ?>
+                            <h6 class="mt-3 mb-2"><?php echo esc_html($group['parent']->name); ?></h6>
+
+                            <?php if (!empty($group['children'])) : ?>
+                                <ul class="bp-list check">
+                                    <?php foreach ($group['children'] as $child) : ?>
+                                        <li>
+                                            <i class="fa-solid fa-check"></i>
+                                            <?php echo esc_html($child->name); ?>
+                                        </li>
+                                    <?php endforeach; ?>
+                                </ul>
+                            <?php endif; ?>
+
+                        <?php endforeach; ?>
+
                     <?php endif; ?>
                 </div>
                 <!-- Brands -->
@@ -351,7 +387,7 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
           <?php endif; ?>
         </div><!-- /enquiry -->
         */ ?>
-                <!-- Opening Hours -->
+        <!-- Opening Hours -->
         <?php if ( $hours_arr ) : ?>
         <div class="bp-card mt-3">
             <h3 class="bp-side-title">
@@ -399,14 +435,14 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                 <span><?php echo esc_html( $address ); ?></span>
               </li>
             <?php endif; ?>
-            <?php if ( $phone ) : ?>
+            <?php /* if ( $phone ) : ?>
               <li>
                 <i class="fa-solid fa-phone"></i>
                 <a href="tel:<?php echo esc_attr( preg_replace( '/\D/', '', $phone ) ); ?>">
                   <?php echo esc_html( $phone ); ?>
                 </a>
               </li>
-            <?php endif; ?>
+            <?php endif; */ ?>
             <?php if ( $email && in_array( $tier, [ 'featured', 'premium' ], true ) ) : ?>
               <li>
                 <i class="fa-solid fa-envelope"></i>
@@ -452,6 +488,125 @@ jQuery(function ($) {
         var businessId = $(e.relatedTarget).data('business-id');
         $(this).find('#business_id').val(businessId);
     });
+
+});
+document.addEventListener('DOMContentLoaded', function () {
+    const postcode = document.getElementById('crs-postcode');
+
+    if (postcode) {
+        postcode.setAttribute('maxlength', '4');
+        postcode.setAttribute('inputmode', 'numeric');
+
+        postcode.addEventListener('input', function () {
+            this.value = this.value.replace(/\D/g, '').slice(0, 4);
+        });
+    }
+});
+// New Code
+
+jQuery(document).ready(function ($) {
+
+    var postcodeTimer;
+
+    function resetFields() {
+        $('#crs-suburb')
+            .html('<option value="">— enter postcode —</option>')
+            .prop('disabled', true);
+        $('#crs-region').val('');
+        $('#crs-state').val('');
+        $('#crs-postcode-msg').text('');
+    }
+
+    // Inject status message span after postcode input
+    $('#crs-postcode').after(
+        '<span id="crs-postcode-msg" style="font-size:12px;color:#8a96a3;display:block;margin-top:4px;"></span>'
+    );
+
+    // Also style suburb select to match cs-control
+    $('#crs-suburb').css({
+        'width'       : '100%',
+        'border'      : '1px solid #dce3ec',
+        'border-radius': '8px',
+        'padding'     : '10px',
+        'font-size'   : '15px',
+        'color'       : '#1b2430',
+        'background'  : '#fafbfc',
+        'font-family' : 'inherit',
+        'outline'     : 'none'
+    });
+
+    // Make region + state readonly visually
+    $('#crs-region, #crs-state').css({
+        'background' : '#f4f6f8',
+        'cursor'     : 'not-allowed'
+    });
+
+    // ── Postcode input handler ────────────────────────────────────────
+    $(document).on('input', '#crs-postcode', function () {
+        var pc = $(this).val().trim();
+        resetFields();
+
+        if (pc.length !== 4 || !/^\d{4}$/.test(pc)) return;
+
+        clearTimeout(postcodeTimer);
+        $('#crs-postcode-msg').text('Looking up…');
+
+        postcodeTimer = setTimeout(function () {
+            $.getJSON(
+                crsAjax.ajaxurl,
+                {
+                    action   : 'crs_get_suburbs_by_postcode',
+                    postcode : pc,
+                    nonce    : crsAjax.nonce
+                },
+                function (res) {
+                    $('#crs-postcode-msg').text('');
+                    var suburbs = (res.success && res.data && res.data.suburbs)
+                        ? res.data.suburbs : [];
+
+                    if (suburbs.length === 0) {
+                        $('#crs-postcode-msg').text('No suburbs found for this postcode.');
+                        return;
+                    }
+
+                    if (suburbs.length === 1) {
+                        // Single match — auto fill everything
+                        var s = suburbs[0];
+                        $('#crs-suburb')
+                            .html('<option value="' + escHtml(s.name) + '" selected>' + escHtml(s.name) + '</option>')
+                            .prop('disabled', false);
+                        $('#crs-region').val(s.region);
+                        $('#crs-state').val(s.state);
+                    } else {
+                        // Multiple suburbs — user selects
+                        var opts = '<option value="">Select suburb…</option>';
+                        $.each(suburbs, function (i, s) {
+                            opts += '<option value="' + escHtml(s.name) + '"'
+                                  + ' data-region="' + escHtml(s.region) + '"'
+                                  + ' data-state="'  + escHtml(s.state)  + '">'
+                                  + escHtml(s.name)
+                                  + '</option>';
+                        });
+                        $('#crs-suburb').html(opts).prop('disabled', false);
+                    }
+                }
+            ).fail(function () {
+                $('#crs-postcode-msg').text('Could not look up postcode. Please try again.');
+            });
+        }, 500);
+    });
+
+    // ── Suburb select → fill Region + State ──────────────────────────
+    $(document).on('change', '#crs-suburb', function () {
+        var $opt = $(this).find('option:selected');
+        $('#crs-region').val($opt.data('region') || '');
+        $('#crs-state').val($opt.data('state')  || '');
+    });
+
+    // ── Helper: escape HTML ───────────────────────────────────────────
+    function escHtml(str) {
+        return $('<span>').text(str || '').html();
+    }
 
 });
 </script>
