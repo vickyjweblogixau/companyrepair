@@ -22,16 +22,19 @@ function crs_email_body_enquiry_received( $enquiry, $business ) {
         $postcode = esc_html( $enquiry['postcode']  ?? '' );
         $region   = esc_html( $enquiry['region']   ?? '' );
         $state    = esc_html( $enquiry['state']    ?? '' );
+        $contact_method     = esc_html( $enquiry['your-contact-method'] ?? '' );
+        $time     = esc_html( $enquiry['your_time'] ?? '' ); // 
     } else {
         $name     = crs_mask_name( $enquiry['name'] );
         $email    = crs_mask_email( $enquiry['email'] );
         $phone    = crs_mask_phone( $enquiry['phone'] );
-        $message  = 'Reactivate your subscription to view this message';
-        $service  = 'Reactivate your subscription to view this service';
+        $message  = 'Activate your subscription to view this message';
+        $service  = 'Activate your subscription to view this service';
         $suburb   = '****';
         $postcode = '****';
         $region   = '****';
         $state    = '****';
+        $time     = '****';
     }
 
     ob_start();
@@ -59,17 +62,17 @@ function crs_email_body_enquiry_received( $enquiry, $business ) {
         <?php endif; ?>
         <tr><td style="background:#eaf1fc;font-weight:bold;">Message</td><td><?php echo $message; ?></td></tr>
         <?php else : ?>
-        <tr><td style="background:#eaf1fc;font-weight:bold;">Details</td><td>Reactivate your subscription to view customer enquiry details.</td></tr>
+        <tr><td style="background:#eaf1fc;font-weight:bold;">Details</td><td>Activate your subscription to view customer enquiry details.</td></tr>
         <?php endif; ?>
     </table>
 
     <?php if ( ! $is_active ) : ?>
     <div style="background:#fff8e6;border:1px solid #f5a623;border-radius:8px;padding:16px;margin-top:10px;">
         <strong style="color:#b5780b;">⚠ Your subscription is inactive</strong>
-        <p style="margin:8px 0;color:#7a5a10;">Customer contact details have been hidden. Reactivate your subscription to access the complete enquiry.</p>
+        <p style="margin:8px 0;color:#7a5a10;">Customer contact details have been hidden. Activate your subscription to access the complete enquiry.</p>
         <a href="<?php echo esc_url( home_url( '/dashboard/?reactivate=' . $business['id'] ) ); ?>"
            style="display:inline-block;background:#1565d8;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">
-            Reactivate Subscription
+            Activate Subscription
         </a>
     </div>
     <?php endif; ?>

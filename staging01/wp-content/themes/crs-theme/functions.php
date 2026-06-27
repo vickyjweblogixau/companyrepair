@@ -48,14 +48,15 @@ add_action('wp_enqueue_scripts', 'my_theme_scripts');
 // Contact Form 7 - Show only current repair service on single page
 add_action('wpcf7_init', function () {
     wpcf7_add_form_tag('repair_services', function () {
-        $html = '<select name="service" class="cs-control">';
+        $html  = '<div class="crs-service-checkboxes">';
         $terms = get_the_terms(get_the_ID(), 'repair-service');
         if (!empty($terms) && !is_wp_error($terms)) {
             $grouped = [];
             foreach ($terms as $term) {
                 if ($term->parent) {
                     $ancestors = get_ancestors($term->term_id, 'repair-service');
-                    $parent = get_term(end($ancestors), 'repair-service');
+                    $parent_id = end($ancestors);
+                    $parent    = get_term($parent_id, 'repair-service');
                 } else {
                     $parent = $term;
                 }
@@ -65,35 +66,40 @@ add_action('wpcf7_init', function () {
                         'children' => [],
                     ];
                 }
-                if ($term->term_id != $parent->term_id) {
+                if ($term->term_id !== $parent->term_id) {
                     $grouped[$parent->term_id]['children'][] = $term;
                 }
             }
             foreach ($grouped as $group) {
-                // If parent has child services
                 if (!empty($group['children'])) {
-                    $html .= '<optgroup label="' . esc_attr($group['parent']->name) . '">';
+                    $html .= '<div class="service-group">';
+                    $html .= '<strong>' . esc_html($group['parent']->name) . '</strong>';
                     foreach ($group['children'] as $child) {
                         $html .= sprintf(
-                            '<option value="%s">%s</option>',
+                            '<label class="service-checkbox">
+                                <input type="checkbox" name="service[]" value="%s">
+                                %s
+                            </label>',
                             esc_attr($child->name),
                             esc_html($child->name)
                         );
                     }
-                    $html .= '</optgroup>';
+                    $html .= '</div>';
                 } else {
-                    // Parent service only
                     $html .= sprintf(
-                        '<option value="%s">%s</option>',
+                        '<label class="service-checkbox">
+                            <input type="checkbox" name="service[]" value="%s">
+                            %s
+                        </label>',
                         esc_attr($group['parent']->name),
                         esc_html($group['parent']->name)
                     );
                 }
             }
         } else {
-            $html .= '<option value="">Select Service</option>';
+            $html .= '<p>No services listed for this business.</p>';
         }
-        $html .= '</select>';
+        $html .= '</div>';
         return $html;
     });
 });

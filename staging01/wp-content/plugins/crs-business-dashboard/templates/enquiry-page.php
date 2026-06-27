@@ -375,7 +375,7 @@ get_header();
 
 /* ── Hero ── */
 .enq-hero {
-    background: #fff;
+    background: var(--crs-navy);
     border-radius: 14px;
     padding: 28px;
     margin-bottom: 4px;
@@ -394,11 +394,11 @@ get_header();
     justify-content: center;
 }
 .enq-hero-logo img { width: 100%; height: 100%; object-fit: contain; padding: 8px; }
-.enq-hero-pre { font-size: 13px; color: #888; margin-bottom: 2px; }
-.enq-hero-name { font-size: clamp(20px,3vw,26px); font-weight: 800; color: var(--crs-navy,#14213d); margin: 0 0 8px; }
+.enq-hero-pre { font-size: 13px; color: #fff; margin-bottom: 2px; }
+.enq-hero-name { font-size: clamp(20px,3vw,26px); font-weight: 800; color: #fff; margin: 0 0 8px; }
 .enq-hero-rating {
     display: flex; align-items: center; gap: 6px;
-    font-size: 14px; color: var(--crs-navy,#14213d); margin-bottom: 10px;
+    font-size: 14px; color:#fff; margin-bottom: 10px;
 }
 .enq-hero-rating .fa-star,
 .enq-hero-rating .fa-star-half-stroke { color: var(--crs-star,#f59e0b); }
@@ -545,6 +545,39 @@ get_header();
     color: #ccc; font-size: 18px;
     z-index: 1;
 }
+/* contact method toggle */
+.enq-toggle {
+    display: flex;
+    gap: 12px;
+}
+
+.enq-toggle-btn {
+    flex: 0 0 auto;
+    min-width: 150px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1.5px solid #dce3ec;
+    background: #fff;
+    border-radius: 9px;
+    padding: 11px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    color: #41505f;
+    cursor: pointer;
+}
+
+.enq-toggle-btn.active {
+    border-color: #1565d8;
+    color: #1565d8;
+    background: #eef4fd;
+}
+
+.enq-toggle-btn i {
+    font-size: 13px;
+}
+
 @media (max-width: 767px) { .enq-step-arrow { display: none; } }
 </style>
 
@@ -571,4 +604,18 @@ document.addEventListener( 'DOMContentLoaded', function () {
     addHidden( 'business_id',   businessId );
     addHidden( 'business_name', businessName );
 } );
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.enq-toggle-btn')) {
+
+        document.querySelectorAll('.enq-toggle-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const btn = e.target.closest('.enq-toggle-btn');
+        btn.classList.add('active');
+
+        document.querySelector('[name="your-contact-method"]').value =
+            btn.dataset.value;
+    }
+});
 </script>

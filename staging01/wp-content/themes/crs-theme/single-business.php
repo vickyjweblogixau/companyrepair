@@ -119,7 +119,7 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
                 </a>
               <?php endif; */ ?>
               <?php //if ( in_array( $tier, [ 'standard', 'featured', 'premium' ], true ) ) : ?>
-                <a href="<?php echo esc_url( home_url( '/enquire/' . $post->post_name . '/' ) ); ?>"
+                <a href="<?php echo esc_url( home_url( '/enquiry/' . $post->post_name . '/' ) ); ?>"
                   class="bp-btn bp-btn-primary">
                     <i class="fa-solid fa-envelope"></i> Enquire Now
                 </a>
@@ -466,7 +466,7 @@ $gallery  = is_array( $gallery ) ? $gallery : [];
         <div class="bp-card bp-quote">
               <h3 class="bp-side-title"><i class="fa-solid fa-file-lines"></i> Get a Free Quote</h3>
               <p>Fill out the form and ABC Computers will get back to you shortly.</p>
-             <a href="<?php echo esc_url( home_url( '/enquire/' . get_post_field( 'post_name', get_the_ID() ) . '/' ) ); ?>"
+             <a href="<?php echo esc_url( home_url( '/enquiry/' . get_post_field( 'post_name', get_the_ID() ) . '/' ) ); ?>"
                 class="sp-btn-enquiry">
                   <?php esc_html_e( 'Enquiry Now', 'crs' ); ?>
               </a>
