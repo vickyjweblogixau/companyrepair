@@ -41,10 +41,13 @@ $payments = array_filter($payments, fn($p) => $p->status === 'succeeded');
                         </thead>
                         <tbody>
                         <?php foreach ($payments as $i => $payment) :
-                            $invoice_num = 'BOD-' . str_pad($payment->id, 5, '0', STR_PAD_LEFT);
+                            $invoice_num = !empty($payment->invoice_number)
+                                ? $payment->invoice_number
+                                : 'BOD-' . str_pad($payment->id, 5, '0', STR_PAD_LEFT);
                             $desc_map    = [
-                                'signup'    => 'Listing Package — Signup',
-                                'listing'   => 'Additional Listing Credit',
+                                'signup'          => 'Subscription Signup',
+                                'renewal'         => 'Monthly Renewal',
+                                'listing'         => 'Additional Listing Credit',
                                 'boost_featured'  => 'Featured Listing Boost',
                                 'boost_exclusive' => 'Exclusive Listing Boost',
                                 'boost_homepage'  => 'Homepage Listing Boost',
@@ -177,16 +180,28 @@ td { padding: 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
 
     <table>
         <thead>
-            <tr><th>Description</th><th>Amount</th></tr>
+            <tr><th>Description</th><th style="text-align:right;">Amount</th></tr>
         </thead>
         <tbody>
             <tr>
                 <td><?php echo esc_html(ucwords(str_replace('_', ' ', $payment->payment_type))); ?></td>
-                <td>$<?php echo number_format((float) $payment->amount, 2); ?> <?php echo strtoupper(esc_html($payment->currency)); ?></td>
+                <td style="text-align:right;">$<?php echo number_format((float) $payment->amount, 2); ?> <?php echo strtoupper(esc_html($payment->currency)); ?></td>
+            </tr>
+            <?php
+            $gst     = !empty($payment->amount_gst) ? (float) $payment->amount_gst : round((float)$payment->amount - ((float)$payment->amount / 1.1), 2);
+            $ex_gst  = (float) $payment->amount - $gst;
+            ?>
+            <tr style="color:#666;font-size:12px;">
+                <td>Subtotal (excl. GST)</td>
+                <td style="text-align:right;">$<?php echo number_format($ex_gst, 2); ?></td>
+            </tr>
+            <tr style="color:#666;font-size:12px;">
+                <td>GST (10%)</td>
+                <td style="text-align:right;">$<?php echo number_format($gst, 2); ?></td>
             </tr>
             <tr class="total-row">
-                <td>Total</td>
-                <td>$<?php echo number_format((float) $payment->amount, 2); ?> <?php echo strtoupper(esc_html($payment->currency)); ?></td>
+                <td>Total (incl. GST)</td>
+                <td style="text-align:right;">$<?php echo number_format((float) $payment->amount, 2); ?> <?php echo strtoupper(esc_html($payment->currency)); ?></td>
             </tr>
         </tbody>
     </table>

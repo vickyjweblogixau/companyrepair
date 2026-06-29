@@ -271,6 +271,74 @@ function bod_render_owner_detail($owner_id) {
                 <?php endif; ?>
             </div>
         </div>
+        <!-- Subscription Management -->
+        <h2 style="margin-top:24px;">Subscription</h2>
+        <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;margin-bottom:24px;">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
+                <div>
+                    <div style="font-size:12px;color:#666;margin-bottom:4px;">Status</div>
+                    <div><?php echo class_exists('CRS_Subscriptions') ? CRS_Subscriptions::status_badge($owner->sub_status ?? 'active') : esc_html($owner->sub_status ?? '—'); ?></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#666;margin-bottom:4px;">Plan</div>
+                    <div style="font-weight:600;"><?php echo esc_html(ucfirst($owner->sub_plan ?? '—')); ?></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#666;margin-bottom:4px;">Amount</div>
+                    <div style="font-weight:600;">$<?php echo number_format((float)($owner->sub_amount ?? 0), 2); ?> AUD</div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#666;margin-bottom:4px;">Next Renewal</div>
+                    <div style="font-weight:600;"><?php echo $owner->sub_renewal_date ? esc_html(date('M j, Y', strtotime($owner->sub_renewal_date))) : '—'; ?></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#666;margin-bottom:4px;">Start Date</div>
+                    <div><?php echo $owner->sub_start_date ? esc_html(date('M j, Y', strtotime($owner->sub_start_date))) : '—'; ?></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#666;margin-bottom:4px;">Cancelled At</div>
+                    <div><?php echo $owner->sub_cancelled_at ? esc_html(date('M j, Y', strtotime($owner->sub_cancelled_at))) : '—'; ?></div>
+                </div>
+                <div>
+                    <div style="font-size:12px;color:#666;margin-bottom:4px;">Grace Until</div>
+                    <div><?php echo $owner->sub_grace_until ? esc_html(date('M j, Y', strtotime($owner->sub_grace_until))) : '—'; ?></div>
+                </div>
+            </div>
+
+            <!-- Edit form -->
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="border-top:1px solid #f0f0f0;padding-top:16px;">
+                <?php wp_nonce_field('bod_update_subscription_' . $owner->id); ?>
+                <input type="hidden" name="action" value="bod_update_subscription">
+                <input type="hidden" name="owner_id" value="<?php echo esc_attr((string) $owner->id); ?>">
+                <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-end;">
+                    <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">
+                        Status
+                        <select name="sub_status" style="min-width:130px;">
+                            <?php foreach (['active','past_due','suspended','cancelled'] as $s) : ?>
+                                <option value="<?php echo $s; ?>" <?php selected($owner->sub_status ?? '', $s); ?>><?php echo ucwords(str_replace('_',' ',$s)); ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">
+                        Plan
+                        <select name="sub_plan" style="min-width:110px;">
+                            <option value="monthly" <?php selected($owner->sub_plan ?? '', 'monthly'); ?>>Monthly</option>
+                            <option value="yearly"  <?php selected($owner->sub_plan ?? '', 'yearly');  ?>>Yearly</option>
+                        </select>
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">
+                        Amount (AUD incl. GST)
+                        <input type="number" name="sub_amount" value="<?php echo esc_attr((string)($owner->sub_amount ?? '')); ?>" step="0.01" min="0" style="width:120px;">
+                    </label>
+                    <label style="display:flex;flex-direction:column;gap:4px;font-size:13px;">
+                        Next Renewal Date
+                        <input type="date" name="sub_renewal_date" value="<?php echo $owner->sub_renewal_date ? esc_attr(date('Y-m-d', strtotime($owner->sub_renewal_date))) : ''; ?>" style="width:150px;">
+                    </label>
+                    <button type="submit" class="button button-primary">Save Subscription</button>
+                </div>
+            </form>
+        </div>
+
         <!-- Listings -->
         <h2>Listings (<?php echo count($listings); ?>)</h2>
         <table class="wp-list-table widefat fixed striped">
@@ -341,6 +409,28 @@ function bod_render_owner_detail($owner_id) {
 
     <?php
 }
+// ============================================
+// ADMIN POST: Update Subscription
+// ============================================
+add_action('admin_post_bod_update_subscription', 'bod_handle_update_subscription');
+function bod_handle_update_subscription() {
+    if (!current_user_can('manage_options')) wp_die('Unauthorized');
+    $owner_id = absint($_POST['owner_id'] ?? 0);
+    check_admin_referer('bod_update_subscription_' . $owner_id);
+
+    if (class_exists('CRS_Subscriptions')) {
+        CRS_Subscriptions::admin_update($owner_id, [
+            'sub_status'       => sanitize_text_field($_POST['sub_status']       ?? ''),
+            'sub_plan'         => sanitize_text_field($_POST['sub_plan']         ?? ''),
+            'sub_amount'       => sanitize_text_field($_POST['sub_amount']       ?? ''),
+            'sub_renewal_date' => sanitize_text_field($_POST['sub_renewal_date'] ?? ''),
+        ]);
+    }
+
+    wp_safe_redirect(admin_url('admin.php?page=business-owners&action=view&id=' . $owner_id . '&saved=1'));
+    exit;
+}
+
 // ============================================
 // ADMIN POST: Save Notes
 // ============================================

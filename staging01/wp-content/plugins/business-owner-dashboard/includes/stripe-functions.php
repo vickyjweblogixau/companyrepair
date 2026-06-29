@@ -85,20 +85,27 @@ function bod_create_signup_checkout($owner_data) {
 
     \Stripe\Stripe::setApiKey($secret_key);
 
-    // Validate price ID before hitting Stripe — gives a clear error instead of a generic 500
-    $price_id = BOD_LISTING_PRICE_ID ?: get_option('bod_listing_price_id', '');
-    if (empty($price_id)) {
-        error_log('[BOD Stripe] Subscription Price ID is not set in Settings.');
-        return ['success' => false, 'error' => 'Subscription not yet configured. Please contact admin.'];
-    }
-
     try {
         $tax_rate    = get_option('bod_gst_tax_rate', get_option('cf7_stripe_gst_tax_rate', ''));
         $success_url = home_url('/business-owner-signup-success/?session_id={CHECKOUT_SESSION_ID}&type=signup');
         $cancel_url  = home_url('/list-your-business/?cancelled=1');
 
-        // Subscription mode — tax rate goes on subscription_data, not on the line item
-        $line_item = ['price' => $price_id, 'quantity' => 1];
+        // Use display amount (incl. GST) directly — avoids recurring price ID conflict
+        $amount_display = (float) (defined('BOD_LISTING_AMOUNT_DISPLAY') ? BOD_LISTING_AMOUNT_DISPLAY : get_option('bod_listing_amount_display', 35));
+        $amount_cents   = (int) round($amount_display * 100);
+
+        // Build line item using inline price (no price ID needed)
+        $line_item = [
+            'price_data' => [
+                'currency'     => 'aud',
+                'unit_amount'  => $amount_cents,
+                'product_data' => [
+                    'name'        => 'Business Listing — Monthly Subscription',
+                    'description' => 'Monthly listing on ComputerRepairServices.com.au (incl. GST)',
+                ],
+            ],
+            'quantity' => 1,
+        ];
 
         $customer = \Stripe\Customer::create([
             'email' => $owner_data['email'],
@@ -114,39 +121,36 @@ function bod_create_signup_checkout($owner_data) {
 
         $promo_params = [];
         if (!empty($owner_data['promotion_code'])) {
-            $promo_params['allow_promotion_codes'] = false;
-            // Validate promo code and apply as subscription discount
             try {
                 $codes = \Stripe\PromotionCode::all(['code' => $owner_data['promotion_code'], 'active' => true, 'limit' => 1]);
                 if (!empty($codes->data)) {
+                    // discounts and allow_promotion_codes are mutually exclusive
                     $promo_params['discounts'] = [['promotion_code' => $codes->data[0]->id]];
+                } else {
+                    $promo_params['allow_promotion_codes'] = true;
                 }
             } catch (\Stripe\Exception\ApiErrorException $e) {
-                // ignore invalid promo code
+                $promo_params['allow_promotion_codes'] = true;
             }
         } else {
             $promo_params['allow_promotion_codes'] = true;
         }
 
-        $subscription_data = [
-            'metadata' => [
-                'source'       => 'business_owner_signup',
-                'owner_email'  => $owner_data['email'] ?? '',
-                'business_name'=> $owner_data['business_name'] ?? '',
-            ],
-        ];
-        if ($tax_rate) {
-            $subscription_data['default_tax_rates'] = [$tax_rate];
-        }
-
         $session_params = array_merge([
-            'customer'          => $customer->id,
-            'mode'              => 'subscription',
-            'line_items'        => [$line_item],
-            'success_url'       => $success_url,
-            'cancel_url'        => $cancel_url,
-            'subscription_data' => $subscription_data,
-            'metadata'          => [
+            'customer'                        => $customer->id,
+            'mode'                            => 'payment',
+            'payment_method_types'            => ['card'],
+            'payment_intent_data'             => [
+                'setup_future_usage' => 'off_session', // save card for future renewals
+                'metadata'           => [
+                    'owner_email'  => $owner_data['email'] ?? '',
+                    'source'       => 'business_owner_signup',
+                ],
+            ],
+            'line_items'                      => [$line_item],
+            'success_url'                     => $success_url,
+            'cancel_url'                      => $cancel_url,
+            'metadata'                        => [
                 'owner_name'           => $owner_data['name'] ?? '',
                 'owner_email'          => $owner_data['email'] ?? '',
                 'owner_phone'          => $owner_data['phone'] ?? '',
@@ -180,12 +184,12 @@ function bod_create_signup_checkout($owner_data) {
 
     } catch (\Stripe\Exception\ApiErrorException $e) {
         error_log('[BOD Stripe] Stripe API error during signup checkout: ' . $e->getMessage());
-        return ['success' => false, 'error' => 'Payment session could not be created. Please try again.'];
+        $debug = defined('WP_DEBUG') && WP_DEBUG ? ' (' . $e->getMessage() . ')' : '';
+        return ['success' => false, 'error' => 'Payment session could not be created. Please try again.' . $debug];
     } catch (\Throwable $e) {
-        // Catch any PHP Error or Exception (including "class not found", TypeError, etc.)
-        // so the AJAX handler always returns JSON instead of triggering an HTTP 500.
         error_log('[BOD Stripe] Unexpected error during signup checkout: ' . get_class($e) . ': ' . $e->getMessage() . ' in ' . $e->getFile() . ':' . $e->getLine());
-        return ['success' => false, 'error' => 'An unexpected error occurred. Please try again or contact support.'];
+        $debug = defined('WP_DEBUG') && WP_DEBUG ? ' (' . $e->getMessage() . ')' : '';
+        return ['success' => false, 'error' => 'An unexpected error occurred. Please try again or contact support.' . $debug];
     }
 }
 
@@ -308,13 +312,8 @@ function bod_handle_stripe_webhook(WP_REST_Request $request) {
         case 'checkout.session.completed':
             bod_webhook_handle_checkout_completed($event->data->object);
             break;
-        case 'customer.subscription.deleted':
-            // Subscription cancelled — mark owner as inactive
-            bod_webhook_handle_subscription_cancelled($event->data->object);
-            break;
         case 'invoice.payment_failed':
-            // Log failed renewal payment
-            error_log('[BOD Webhook] Invoice payment failed for subscription: ' . ($event->data->object->subscription ?? 'unknown'));
+            error_log('[BOD Webhook] Invoice payment failed: ' . ($event->data->object->subscription ?? 'unknown'));
             break;
         case 'payment_intent.succeeded':
             // handled via checkout.session.completed
@@ -400,79 +399,61 @@ function bod_webhook_process_signup($session) {
         return;
     }
 
-    // Mark pending payment as succeeded (or insert new record)
+    $amount = ($session->amount_total ?? 0) / 100;
+    $gst    = round($amount - ($amount / 1.1), 2);
+
+    // Check if payment already processed
     $existing_payment = $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM " . BOD_TABLE_PAYMENTS . " WHERE stripe_checkout_session_id = %s AND payment_type = 'listing' LIMIT 1",
+        "SELECT * FROM " . BOD_TABLE_PAYMENTS . " WHERE stripe_checkout_session_id = %s AND payment_type = 'signup' LIMIT 1",
         $session->id
     ));
 
-    $amount   = ($session->amount_total ?? 0) / 100;
-    $gst      = round($amount - ($amount / 1.1), 2);
-
-    if ($existing_payment) {
-        $wpdb->update(BOD_TABLE_PAYMENTS, [
-            'status'       => 'succeeded',
-            'completed_at' => current_time('mysql'),
-            'amount'       => $amount,
-            'amount_gst'   => $gst,
-        ], ['id' => $existing_payment->id]);
-
-        $listing_id = (int) ($existing_payment->listing_id ?? 0);
-    } else {
-        // Create listing record first
-        $listing_id = (int) bod_create_listing_record($owner_id, $session);
-        bod_create_payment_record($owner_id, $listing_id, 'listing', $session);
-    }
-
-    // Activate the listing credit
-    if ($listing_id) {
-        bod_activate_listing($listing_id, $owner_id);
-    } else {
-        // Credit without listing record
-        $wpdb->query($wpdb->prepare(
-            "UPDATE " . BOD_TABLE_OWNERS . " SET available_listing_credits = available_listing_credits + 1, total_listings_purchased = total_listings_purchased + 1 WHERE id = %d",
-            $owner_id
-        ));
-    }
-
-    // -------------------------------------------------------
-    // PENDING APPROVAL FLOW
-    // Payment is confirmed. Leave approval_status = 'pending'.
-    // Admin must review at:
-    //   wp-admin/admin.php?page=business-owners-pending
-    // and manually approve + create the account from there.
-    // -------------------------------------------------------
-
-    // Send owner a "submission received" email (payment confirmed, pending review).
-    bod_send_submission_received_email($owner_id, $session);
-
-    // Notify admin to review the new application.
-    bod_send_new_owner_admin_notification($owner_id);
-
-    error_log('[BOD Webhook] Payment confirmed for owner #' . $owner_id . ' (' . $email . '). Awaiting admin approval.');
-}
-
-/**
- * Handle subscription cancellation — mark the owner's subscription as inactive.
- */
-function bod_webhook_handle_subscription_cancelled($subscription) {
-    global $wpdb;
-
-    $subscription_id = $subscription->id ?? '';
-    if (!$subscription_id) return;
-
-    $owner = $wpdb->get_row($wpdb->prepare(
-        "SELECT * FROM " . BOD_TABLE_OWNERS . " WHERE stripe_subscription_id = %s LIMIT 1",
-        $subscription_id
-    ));
-
-    if (!$owner) {
-        error_log('[BOD Webhook] Subscription cancelled but no owner found for: ' . $subscription_id);
+    if ($existing_payment && $existing_payment->status === 'succeeded') {
+        error_log('[BOD Webhook] Signup already processed for session: ' . $session->id);
         return;
     }
 
-    bod_update_owner((int) $owner->id, ['approval_status' => 'rejected']);
-    bod_add_notification((int) $owner->id, 'subscription', 'Subscription Cancelled', 'Your subscription has been cancelled. Please contact us if you wish to reactivate your listing.');
+    // Activate subscription via CRS_Subscriptions (creates payment record + sets sub_* fields)
+    $stripe_pi   = $session->payment_intent ?? '';
+    $invoice_num = '';
+    if (class_exists('CRS_Subscriptions')) {
+        $invoice_num = CRS_Subscriptions::activate_after_signup(
+            $owner_id,
+            $amount,
+            'monthly',
+            $stripe_pi,
+            $session->id
+        );
+    } else {
+        // Fallback: manual insert if class not loaded
+        $wpdb->insert(BOD_TABLE_PAYMENTS, [
+            'owner_id'                   => $owner_id,
+            'payment_type'               => 'signup',
+            'stripe_checkout_session_id' => $session->id,
+            'stripe_payment_intent_id'   => $stripe_pi,
+            'payment_source'             => 'stripe',
+            'amount'                     => $amount,
+            'amount_gst'                 => $gst,
+            'currency'                   => $session->currency ?? 'aud',
+            'status'                     => 'succeeded',
+            'completed_at'               => current_time('mysql'),
+            'created_at'                 => current_time('mysql'),
+        ]);
+    }
 
-    error_log('[BOD Webhook] Subscription cancelled for owner #' . (int) $owner->id);
+    // Update listing credits
+    $wpdb->query($wpdb->prepare(
+        "UPDATE " . BOD_TABLE_OWNERS . " SET available_listing_credits = available_listing_credits + 1, total_listings_purchased = total_listings_purchased + 1 WHERE id = %d",
+        $owner_id
+    ));
+
+    // Send confirmation emails
+    bod_send_submission_received_email($owner_id, $session);
+    bod_send_new_owner_admin_notification($owner_id);
+
+    error_log('[BOD Webhook] Signup payment confirmed for owner #' . $owner_id . ' (' . $email . '). Invoice: ' . $invoice_num);
 }
+
+
+// Subscription cancellation is now handled by CRS_Subscriptions::cancel()
+// called from the owner's dashboard — no Stripe webhook needed.

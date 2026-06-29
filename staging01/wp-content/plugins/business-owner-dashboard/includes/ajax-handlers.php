@@ -193,6 +193,23 @@ add_action('wp_ajax_bod_mark_listing_sold', function() {
     wp_send_json_success(['message' => 'Listing marked as sold.']);
 });
 // ============================================
+// CANCEL SUBSCRIPTION (owner-initiated)
+// ============================================
+add_action('wp_ajax_bod_cancel_subscription', function() {
+    if (!is_user_logged_in()) wp_send_json_error(['message' => 'Not logged in']);
+    check_ajax_referer('bod_cancel_sub', 'nonce');
+    $owner_id = bod_get_current_owner_id();
+    if (!$owner_id) wp_send_json_error(['message' => 'Owner not found']);
+    if (class_exists('CRS_Subscriptions')) {
+        CRS_Subscriptions::cancel($owner_id);
+        wp_send_json_success(['message' => 'Subscription cancelled.']);
+    } else {
+        bod_update_owner($owner_id, ['sub_status' => 'cancelled', 'sub_cancelled_at' => current_time('mysql')]);
+        wp_send_json_success(['message' => 'Subscription cancelled.']);
+    }
+});
+
+// ============================================
 // EMAIL VALIDATION (called by signup form on blur)
 // ============================================
 add_action( 'wp_ajax_nopriv_bod_validate_email', 'bod_ajax_validate_email' );
