@@ -13,14 +13,16 @@ defined( 'ABSPATH' ) || exit;
 class CRS_Setup {
 
     public static function init() {
-        add_action( 'init',       [ __CLASS__, 'register_cpt' ],                    5 );
-        add_action( 'init',       [ __CLASS__, 'register_taxonomies' ],             5 );
-        add_action( 'init',       [ __CLASS__, 'register_subscription_plan_cpt' ],  5 );
-        add_action( 'init',       [ __CLASS__, 'register_subscription_cpts' ],      5 );
-        add_action( 'save_post',  [ __CLASS__, 'save_plan_meta' ] );
-        add_action( 'admin_init', [ __CLASS__, 'migrate_subscription_columns' ] );
-        add_action( 'admin_init', [ __CLASS__, 'maybe_insert_default_plans' ] );
+        // These 4 MUST run every request — WP rebuilds CPT/taxonomy registry each load
+        add_action( 'init',      [ __CLASS__, 'register_cpt' ],                   5 );
+        add_action( 'init',      [ __CLASS__, 'register_taxonomies' ],            5 );
+        add_action( 'init',      [ __CLASS__, 'register_subscription_plan_cpt' ], 5 );
+        add_action( 'init',      [ __CLASS__, 'register_subscription_cpts' ],     5 );
+        // These run on user action — correct hooks
+        add_action( 'save_post', [ __CLASS__, 'save_plan_meta' ] );
         add_filter( 'wp_count_posts', [ __CLASS__, 'fix_cpt_counts' ], 10, 2 );
+        // migrate_subscription_columns and maybe_insert_default_plans
+        // REMOVED from here — moved to register_activation_hook in crs-business-dashboard.php
     }
 
     /* ====================================================================

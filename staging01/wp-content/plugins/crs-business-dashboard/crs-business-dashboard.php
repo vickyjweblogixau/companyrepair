@@ -51,6 +51,15 @@ function crs_activate() {
     CRS_Setup::create_roles();
     CRS_Setup::create_enquiries_table();
     CRS_Setup::insert_default_terms();
+    update_option( 'crs_repair_service_parents_v1', true );
+
+    // One-time slug migration on activation
+    if ( ! get_option( 'crs_state_slugs_v2' ) ) {
+        CRS_Setup::migrate_state_slugs();
+    }
+
+    // Ensure admin caps are set on activation
+    crs_ensure_admin_caps();
 
     // Flush rewrite rules AFTER CPT/taxonomy registration
     flush_rewrite_rules();
@@ -69,20 +78,21 @@ function crs_deactivate() {
 add_action( 'plugins_loaded', 'crs_load_plugin' );
 
 // One-time migration: update au-state slugs to full names
-add_action( 'admin_init', function () {
+/* add_action( 'admin_init', function () {
     if ( ! get_option( 'crs_state_slugs_v2' ) && class_exists( 'CRS_Setup' ) ) {
         CRS_Setup::migrate_state_slugs();
     }
-} );
+} ); */
 
 // One-time migration: seed repair-service taxonomy with parent categories
+/* 
 add_action( 'admin_init', function () {
     if ( ! get_option( 'crs_repair_service_parents_v1' ) && class_exists( 'CRS_Setup' ) ) {
         CRS_Setup::insert_default_terms();
         update_option( 'crs_repair_service_parents_v1', true );
     }
 } );
-
+*/
 function crs_load_plugin() {
     $includes = [
         'inc/class-crs-setup.php',        // CPT, taxonomies, roles, DB
@@ -96,7 +106,8 @@ function crs_load_plugin() {
         'inc/class-crs-rewrite.php',      // Custom rewrite rules
         'inc/class-crs-email.php',      // Custom rewrite rules
         'inc/class-crs-image-handler.php',  // Enquiry image handler
-         'inc/class-crs-enquiry-form.php',  // Enquiry image handler
+        'inc/class-crs-enquiry-form.php',  // Enquiry image handler
+        'inc/class-crs-cache-manager.php', // Cache manager
 
     ];
 
@@ -114,11 +125,15 @@ function crs_load_plugin() {
 
 /* --------------------------------------------------------------------------
  * Ensure administrator always has the custom business capabilities.
- * Runs once per request in admin; cheap no-op if caps already exist.
+ * Runs once ever (on activation). Gated by option so admin_init is free.
  * ---------------------------------------------------------------------- */
 add_action( 'admin_init', 'crs_ensure_admin_caps' );
 
 function crs_ensure_admin_caps() {
+    if ( get_option( 'crs_admin_caps_v1' ) ) {
+        return; // already set — zero work on every admin request
+    }
+
     $admin = get_role( 'administrator' );
     if ( ! $admin ) {
         return;
@@ -137,6 +152,8 @@ function crs_ensure_admin_caps() {
             $admin->add_cap( $cap );
         }
     }
+
+    update_option( 'crs_admin_caps_v1', true );
 }
 add_action('wp_enqueue_scripts', function () {
     if (get_query_var('crs_enquiry_slug')) {
