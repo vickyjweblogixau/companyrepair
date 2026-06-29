@@ -449,6 +449,8 @@ function bod_frontend_enqueue_scripts() {
             'amount'     => BOD_LISTING_AMOUNT_DISPLAY,
             'nonce'      => wp_create_nonce('bod_signup'),
             'successUrl' => home_url('/business-owner-signup-success/'),
+            'validateNonce' => wp_create_nonce('bod_validate_email'),
+
         ]);
     }
 }
@@ -470,5 +472,28 @@ function bod_register_rest_routes() {
         'permission_callback' => '__return_true',
     ]);
 }
+// ============================================
+// REST: Validate email (called by signup form JS)
+// ============================================
+function bod_rest_validate_email( WP_REST_Request $request ) {
+    $email = sanitize_email( $request->get_param('email') ?? '' );
 
-// Val
+    if ( ! is_email( $email ) ) {
+        return new WP_REST_Response( [ 'valid' => false, 'message' => 'Invalid email address.' ], 200 );
+    }
+
+    $existing = bod_get_owner_by_email( $email );
+    if ( ! $existing ) {
+        return new WP_REST_Response( [ 'valid' => true ], 200 );
+    }
+
+    $messages = [
+        'approved' => 'An account with this email already exists. Please log in instead.',
+        'pending'  => 'This email has already been submitted and is pending review.',
+        'rejected' => 'This email was previously rejected. Please contact us.',
+    ];
+
+    $msg = $messages[ $existing->approval_status ] ?? 'This email is already registered.';
+
+    return new WP_REST_Response( [ 'valid' => false, 'message' => $msg ], 200 );
+}

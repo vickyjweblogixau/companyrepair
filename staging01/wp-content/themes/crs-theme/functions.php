@@ -17,7 +17,7 @@ require_once CRS_DIR . '/inc/enqueue.php';
 require_once CRS_DIR . '/inc/template-helpers.php';
 require_once CRS_DIR . '/inc/breadcrumbs.php';
 // New Role
-add_action( 'after_switch_theme', 'create_business_owner_role' );
+/*add_action( 'after_switch_theme', 'create_business_owner_role' );
 function create_business_owner_role() {
     if ( get_role( 'business_owner' ) ) {
         return; // Already exists, skip
@@ -36,10 +36,10 @@ function create_business_owner_role() {
         'Business Owner',
         $capabilities
     );
-}
+} 
 add_action( 'switch_theme', function() {
     remove_role( 'business_owner' );
-});
+}); */
 function my_theme_scripts() {
     wp_enqueue_script('jquery');
 }
@@ -141,3 +141,7 @@ function crs_save_cf7_enquiry_to_db( $contact_form, $result ) {
     $enquiry_id = $wpdb->insert_id;
     do_action( 'crs_enquiry_submitted', $enquiry_id, $business_id );
 }
+// Raise CF7 file upload size limit to 10MB (in bytes)
+add_filter( 'wpcf7_upload_file_size_limit', function( $bytes ) {
+    return 10 * 1024 * 1024; // 10 MB
+});

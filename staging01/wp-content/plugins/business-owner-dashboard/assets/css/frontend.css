@@ -1,0 +1,9 @@
+.bod-email-hint {
+    font-size: 12px;
+    margin-top: 4px;
+    display: block;
+    min-height: 16px;
+    line-height: 1.4;
+}
+.bod-email-hint.ok    { color: #198754; }
+.bod-email-hint.error { color: #dc3545; }

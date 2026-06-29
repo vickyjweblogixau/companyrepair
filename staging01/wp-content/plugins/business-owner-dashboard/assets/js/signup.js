@@ -13,11 +13,13 @@
     $(document).on('input', '#bod-signup-form [name="email"]', function () {
         var $input = $(this);
         var $hint  = $input.siblings('.bod-email-hint');
+         var $btn    = $('#bod-submit-btn');
         clearTimeout(emailTimer);
 
         var email = $.trim($input.val());
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
             $hint.text('').removeClass('ok error');
+             $btn.prop('disabled', false).css('opacity', '1');
             return;
         }
 
@@ -32,8 +34,10 @@
             }, function (res) {
                 if (res && res.success) {
                     $hint.text('✓ Email available').removeClass('error').addClass('ok');
+                    $btn.prop('disabled', false).css('opacity', '1');
                 } else {
                     $hint.text((res && res.data && res.data.message) || 'Email already registered.').removeClass('ok').addClass('error');
+                    $btn.prop('disabled', true).css('opacity', '0.5');
                 }
             });
         }, 600);

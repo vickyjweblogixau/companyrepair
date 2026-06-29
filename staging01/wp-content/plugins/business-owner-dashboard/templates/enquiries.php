@@ -103,7 +103,42 @@ if (!empty($product_ids)) {
                         </div>
                     <?php endif; ?>
 
+                    <?php
+                    // ── Attached images (stored server-side, not emailed) ──
+                    $enquiry_images = get_comment_meta( $enquiry->comment_ID, 'enquiry_images', true );
+                    if ( ! empty( $enquiry_images ) && is_array( $enquiry_images ) ) :
+                        $upload_dir = wp_upload_dir();
+                    ?>
+                    <div style="margin-bottom:12px;">
+                        <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:6px;">
+                            <i class="ti ti-photo me-1"></i>Attached Image(s)
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                        <?php foreach ( $enquiry_images as $field => $info ) :
+                            $url = str_replace(
+                                trailingslashit( $upload_dir['basedir'] ),
+                                trailingslashit( $upload_dir['baseurl'] ),
+                                $info['path']
+                            );
+                            $expires = date( 'M j, Y', $info['uploaded'] + 7 * DAY_IN_SECONDS );
+                        ?>
+                            <div style="position:relative;">
+                                <a href="<?php echo esc_url( $url ); ?>" target="_blank" rel="noopener">
+                                    <img src="<?php echo esc_url( $url ); ?>"
+                                         alt="<?php echo esc_attr( $info['name'] ); ?>"
+                                         style="width:80px;height:80px;object-fit:cover;border-radius:6px;border:1px solid #ddd;display:block;">
+                                </a>
+                                <div style="font-size:10px;color:#999;text-align:center;margin-top:2px;">
+                                    Deletes <?php echo esc_html( $expires ); ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <div style="display:flex;gap:8px;">
+                        <a href="mailto:
                         <a href="mailto:<?php echo esc_attr($enquiry->comment_author_email); ?>?subject=Re: <?php echo esc_attr($post ? $post->post_title : 'Your Enquiry'); ?>"
                            class="btn btn-sm btn-primary">
                             <i class="ti ti-mail me-1"></i>Reply by Email

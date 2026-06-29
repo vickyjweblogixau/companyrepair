@@ -252,6 +252,7 @@ function bod_render_signup_form($atts) {
                   <div class="su-field-body">
                     <label class="su-label">Email Address <span class="req">*</span></label>
                     <input type="email" name="email" id="bod-email" class="su-input" placeholder="e.g. john@abcrepairs.com.au" required>
+                    <span class="bod-email-hint" style="font-size:12px;margin-top:4px;display:block;min-height:16px;"></span>
                   </div>
                 </div>
 
@@ -314,6 +315,7 @@ function bod_render_signup_form($atts) {
                   <div class="su-field-body">
                     <label class="su-label">Primary Service Area <span class="req">*</span></label>
                     <input type="text" name="primary_service_area" id="bod-service-area" class="su-input" placeholder="e.g. Melbourne, Geelong, Sydney" required>
+                  
                   </div>
                 </div>
 
@@ -449,7 +451,7 @@ function bod_render_signup_form($atts) {
         $('#bod-description').on('input', function() {
             $('#bod-desc-count').text(this.value.length);
         });
-
+        
         // ── Postcode → suburb cascade (reads local au-suburb taxonomy) ──
         var postcodeTimer;
 

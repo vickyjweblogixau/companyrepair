@@ -14,6 +14,20 @@
  */
 
 defined( 'ABSPATH' ) || exit;
+// ── File upload size fixes ──────────────────────────────────────
+// Raise PHP limits via ini (works on most shared hosts)
+@ini_set( 'upload_max_filesize', '10M' );
+@ini_set( 'post_max_size',       '12M' );
+
+// Raise WordPress core upload cap
+add_filter( 'upload_size_limit', function( $size ) {
+    return 10 * 1024 * 1024;
+});
+
+// Raise CF7-specific file size validation
+add_filter( 'wpcf7_upload_file_size_limit', function( $bytes ) {
+    return 10 * 1024 * 1024;
+});
 
 /* --------------------------------------------------------------------------
  * Constants
@@ -81,6 +95,8 @@ function crs_load_plugin() {
         'inc/class-crs-ajax.php',         // AJAX handlers
         'inc/class-crs-rewrite.php',      // Custom rewrite rules
         'inc/class-crs-email.php',      // Custom rewrite rules
+        'inc/class-crs-image-handler.php',  // Enquiry image handler
+         'inc/class-crs-enquiry-form.php',  // Enquiry image handler
 
     ];
 
@@ -121,4 +137,42 @@ function crs_ensure_admin_caps() {
             $admin->add_cap( $cap );
         }
     }
+}
+add_action('wp_enqueue_scripts', function () {
+    if (get_query_var('crs_enquiry_slug')) {
+
+        wp_enqueue_style(
+            'crs-enquiry-page',
+            CRS_PLUGIN_URL . 'assets/css/business-enquiry.css',
+            [],
+            CRS_PLUGIN_VERSION
+        );
+
+        wp_enqueue_script(
+            'crs-enquiry-page',
+            CRS_PLUGIN_URL . 'assets/js/business-enquiry.js',
+            [],
+            CRS_PLUGIN_VERSION,
+            true // Load in footer
+        );
+    }
+});
+/* --------------------------------------------------------------------------
+ * CF7 — Enquiry photo upload: raise size limit + make field optional
+ * ---------------------------------------------------------------------- */
+// Raise CF7 internal file size limit to match server capacity
+add_filter( 'wpcf7_upload_file_size_limit', function () {
+    return 256 * 1024 * 1024; // 256 MB — matches server upload_max_filesize
+} );
+
+// Make photos field optional (no error when no file uploaded)
+add_filter( 'wpcf7_validate_file*', function ( $result, $tag ) {
+    if ( $tag->name === 'photos' && empty( $_FILES['photos']['name'][0] ) ) {
+        return $result; // skip validation — field is optional
+    }
+    return $result;
+}, 20, 2 );
+function wpcf7_upload_file_size_limit() {
+    $max_file_size = wp_max_upload_size(); // WordPress cap
+    return apply_filters( 'wpcf7_upload_file_size_limit', $max_file_size );
 }

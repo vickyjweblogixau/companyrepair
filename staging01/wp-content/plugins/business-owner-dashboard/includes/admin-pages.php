@@ -4,7 +4,6 @@
  * All Owners, Pending Approval, Pending Payments, Owner Detail
  */
 if (!defined('ABSPATH')) exit;
-
 // ============================================
 // ALL OWNERS LIST
 // ============================================
@@ -13,15 +12,20 @@ function bod_render_owners_list() {
         bod_render_owner_detail((int) $_GET['id']);
         return;
     }
-
     $counts          = bod_get_dashboard_counts();
     $approval_filter = sanitize_text_field($_GET['approval'] ?? '');
     $search          = sanitize_text_field($_GET['s'] ?? '');
     $date_from       = sanitize_text_field($_GET['date_from'] ?? '');
     $date_to         = sanitize_text_field($_GET['date_to'] ?? '');
     $paged           = max(1, (int) ($_GET['paged'] ?? 1));
-
-    $result     = bod_get_owners(['approval_status' => $approval_filter, 'search' => $search, 'date_from' => $date_from, 'date_to' => $date_to, 'page' => $paged]);
+    $result     = bod_get_owners([
+        'approval_status' => $approval_filter,
+        'search' => $search,
+        'date_from' => $date_from,
+        'date_to' => $date_to, 
+        'page' => $paged,
+        'exclude_pending_payments' => false,
+        ]);
     $owners     = $result['owners'];
     $total      = $result['total'];
     $total_pages = $result['pages'];
@@ -29,7 +33,6 @@ function bod_render_owners_list() {
     ?>
     <div class="wrap">
         <h1 class="wp-heading-inline">Business Owners</h1>
-
         <div class="ps-dashboard-stats" style="display:flex;gap:12px;margin:16px 0;">
             <?php $stat_cards = [
                 ['Total Owners',    $counts->total           ?? 0, ''],
@@ -44,7 +47,6 @@ function bod_render_owners_list() {
                 </div>
             <?php endforeach; ?>
         </div>
-
         <!-- Filters -->
         <form method="get" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 0;">
             <input type="hidden" name="page" value="business-owners">
@@ -60,7 +62,6 @@ function bod_render_owners_list() {
             <button type="submit" class="button button-primary">Filter</button>
             <?php if ($has_filters) : ?><a href="<?php echo admin_url('admin.php?page=business-owners'); ?>" class="button">Clear</a><?php endif; ?>
         </form>
-
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -112,7 +113,6 @@ function bod_render_owners_list() {
             <?php endif; ?>
             </tbody>
         </table>
-
         <!-- Pagination -->
         <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;">
             <span style="color:#666;">
@@ -132,12 +132,10 @@ function bod_render_owners_list() {
     </div>
     <?php
 }
-
 function bod_render_pending_owners() {
     $_GET['approval'] = 'pending';
     bod_render_owners_list();
 }
-
 // ============================================
 // PENDING PAYMENTS
 // ============================================
@@ -149,13 +147,10 @@ function bod_render_pending_payments() {
     $paged     = max(1, (int) ($_GET['paged'] ?? 1));
     $per_page  = 20;
     $offset    = ($paged - 1) * $per_page;
-
     $pt = BOD_TABLE_PAYMENTS;
     $ot = BOD_TABLE_OWNERS;
-
     $where  = ["p.payment_type = 'listing'", "p.status = 'pending'"];
     $params = [];
-
     if ($search !== '') {
         $like     = '%' . $wpdb->esc_like($search) . '%';
         $where[]  = '(o.owner_name LIKE %s OR o.owner_email LIKE %s OR p.stripe_checkout_session_id LIKE %s)';
@@ -163,12 +158,9 @@ function bod_render_pending_payments() {
     }
     if ($date_from !== '') { $where[] = 'p.created_at >= %s'; $params[] = $date_from . ' 00:00:00'; }
     if ($date_to   !== '') { $where[] = 'p.created_at <= %s'; $params[] = $date_to . ' 23:59:59'; }
-
     $where_sql = implode(' AND ', $where);
-
     $count_sql = "SELECT COUNT(*) FROM $pt p LEFT JOIN $ot o ON p.owner_id = o.id WHERE $where_sql";
     $total     = empty($params) ? (int) $wpdb->get_var($count_sql) : (int) $wpdb->get_var($wpdb->prepare($count_sql, $params));
-
     $sql_params  = array_merge($params, [$per_page, $offset]);
     $rows        = $wpdb->get_results($wpdb->prepare(
         "SELECT p.*, o.owner_name, o.owner_email, o.owner_phone FROM $pt p LEFT JOIN $ot o ON p.owner_id = o.id WHERE $where_sql ORDER BY p.created_at DESC LIMIT %d OFFSET %d",
@@ -178,7 +170,6 @@ function bod_render_pending_payments() {
     <div class="wrap">
         <h1>Pending Payments</h1>
         <p>Checkout sessions started but not yet completed (payment not confirmed by Stripe).</p>
-
         <form method="get" style="display:flex;gap:8px;padding:10px 0;">
             <input type="hidden" name="page" value="business-owners-pending-payments">
             <input type="search" name="s" value="<?php echo esc_attr($search); ?>" placeholder="Search...">
@@ -186,7 +177,6 @@ function bod_render_pending_payments() {
             <label>To   <input type="date" name="date_to"   value="<?php echo esc_attr($date_to); ?>"></label>
             <button type="submit" class="button button-primary">Filter</button>
         </form>
-
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
@@ -214,21 +204,18 @@ function bod_render_pending_payments() {
     </div>
     <?php
 }
-
 // ============================================
 // OWNER DETAIL VIEW
 // ============================================
 function bod_render_owner_detail($owner_id) {
     $owner = bod_get_owner($owner_id);
     if (!$owner) { echo '<div class="wrap"><p>Owner not found.</p></div>'; return; }
-
     $listings = bod_get_listings_by_owner($owner_id);
     $payments = bod_get_owner_payments($owner_id);
     ?>
     <div class="wrap">
         <h1>Business Owner: <?php echo esc_html($owner->owner_name); ?></h1>
         <a href="<?php echo admin_url('admin.php?page=business-owners'); ?>" class="button" style="margin-bottom:16px;">← Back to All Owners</a>
-
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
             <!-- Owner Info -->
             <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;">
@@ -248,7 +235,6 @@ function bod_render_owner_detail($owner_id) {
                     <?php endif; ?>
                 </table>
             </div>
-
             <!-- Account & Actions -->
             <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;">
                 <h2 style="margin-top:0;">Account Status</h2>
@@ -267,27 +253,24 @@ function bod_render_owner_detail($owner_id) {
                     <p><strong>WP User:</strong> <a href="<?php echo admin_url('user-edit.php?user_id=' . $owner->wp_user_id); ?>">#<?php echo (int) $owner->wp_user_id; ?></a>
                     (<?php echo esc_html($owner->username); ?>)</p>
                 <?php endif; ?>
-
                 <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;">
                     <?php if ($owner->approval_status === 'pending') : ?>
-                        <button class="button button-primary bod-approve-btn" data-id="<?php echo $owner->id; ?>">✓ Approve</button>
+                        <button class="button button-primary bod-approve-btn" data-id="<?php echo  (int) $owner->id; ?>">✓ Approve</button>
                         <button class="button bod-reject-btn" data-id="<?php echo $owner->id; ?>">✗ Reject</button>
                     <?php endif; ?>
                     <?php if ($owner->approval_status === 'approved' && !$owner->wp_user_id) : ?>
-                        <button class="button button-primary bod-create-account-btn" data-id="<?php echo $owner->id; ?>">Create Account</button>
+                        <button class="button button-primary bod-create-account-btn" data-id="<?php echo  (int)  $owner->id; ?>">Create Account</button>
                     <?php endif; ?>
                     <?php if ($owner->wp_user_id) : ?>
                         <button class="button bod-resend-credentials-btn" data-id="<?php echo $owner->id; ?>">Resend Credentials</button>
                     <?php endif; ?>
                     <button class="button bod-grant-listing-btn" data-id="<?php echo $owner->id; ?>">+ Grant Listing Credit</button>
                 </div>
-
                 <?php if ($owner->admin_notes) : ?>
                     <p style="margin-top:12px;padding:8px;background:#fff8e1;border-radius:4px;"><strong>Notes:</strong> <?php echo nl2br(esc_html($owner->admin_notes)); ?></p>
                 <?php endif; ?>
             </div>
         </div>
-
         <!-- Listings -->
         <h2>Listings (<?php echo count($listings); ?>)</h2>
         <table class="wp-list-table widefat fixed striped">
@@ -324,7 +307,6 @@ function bod_render_owner_detail($owner_id) {
             <?php endif; ?>
             </tbody>
         </table>
-
         <!-- Payment History -->
         <h2 style="margin-top:24px;">Payment History (<?php echo count($payments); ?>)</h2>
         <table class="wp-list-table widefat fixed striped">
@@ -346,7 +328,6 @@ function bod_render_owner_detail($owner_id) {
             <?php endif; ?>
             </tbody>
         </table>
-
         <!-- Admin Notes -->
         <h2 style="margin-top:24px;">Admin Notes</h2>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -358,75 +339,8 @@ function bod_render_owner_detail($owner_id) {
         </form>
     </div>
 
-    <script>
-    jQuery(document).ready(function($) {
-        var nonces = bodAdmin.nonces;
-
-        // Approve
-        $('.bod-approve-btn').on('click', function() {
-            var id = $(this).data('id');
-            Swal.fire({title:'Approve this owner?',icon:'question',showCancelButton:true,confirmButtonText:'Approve'}).then(function(r){
-                if (r.isConfirmed) {
-                    $.post(bodAdmin.ajaxUrl, {action:'bod_approve_owner', owner_id: id, nonce: nonces.approve}, function(res){
-                        if (res.success) { Swal.fire('Approved!','','success').then(function(){location.reload();}); }
-                        else { Swal.fire('Error', res.data.message, 'error'); }
-                    });
-                }
-            });
-        });
-
-        // Reject
-        $('.bod-reject-btn').on('click', function() {
-            var id = $(this).data('id');
-            Swal.fire({title:'Reject this owner?',input:'textarea',inputLabel:'Reason (optional)',icon:'warning',showCancelButton:true,confirmButtonText:'Reject'}).then(function(r){
-                if (r.isConfirmed) {
-                    $.post(bodAdmin.ajaxUrl, {action:'bod_reject_owner', owner_id: id, reason: r.value, nonce: nonces.reject}, function(res){
-                        if (res.success) { Swal.fire('Rejected','','success').then(function(){location.reload();}); }
-                        else { Swal.fire('Error', res.data.message, 'error'); }
-                    });
-                }
-            });
-        });
-
-        // Create Account
-        $('.bod-create-account-btn').on('click', function() {
-            var id = $(this).data('id');
-            Swal.fire({title:'Create WP account?',text:'This will create a WordPress user with the business_owner role and send credentials.',icon:'info',showCancelButton:true}).then(function(r){
-                if (r.isConfirmed) {
-                    $.post(bodAdmin.ajaxUrl, {action:'bod_create_account', owner_id: id, nonce: nonces.createAccount}, function(res){
-                        if (res.success) { Swal.fire('Account Created!', 'Username: ' + res.data.username, 'success').then(function(){location.reload();}); }
-                        else { Swal.fire('Error', res.data.message, 'error'); }
-                    });
-                }
-            });
-        });
-
-        // Resend Credentials
-        $('.bod-resend-credentials-btn').on('click', function() {
-            var id = $(this).data('id');
-            $.post(bodAdmin.ajaxUrl, {action:'bod_send_credentials', owner_id: id, nonce: nonces.sendEmail}, function(res){
-                if (res.success) { Swal.fire('Sent!', 'Credentials email sent.', 'success'); }
-                else { Swal.fire('Error', res.data.message, 'error'); }
-            });
-        });
-
-        // Grant Listing Credit
-        $('.bod-grant-listing-btn').on('click', function() {
-            var id = $(this).data('id');
-            Swal.fire({title:'Grant listing credit?',text:'This adds 1 free listing credit to this owner.',icon:'question',showCancelButton:true}).then(function(r){
-                if (r.isConfirmed) {
-                    $.post(bodAdmin.ajaxUrl, {action:'bod_grant_listing', owner_id: id, nonce: nonces.grantNewListing}, function(res){
-                        if (res.success) { Swal.fire('Granted!','','success').then(function(){location.reload();}); }
-                        else { Swal.fire('Error', res.data.message, 'error'); }
-                    });
-                }
-            });
-        });
-    });
-    </script>
     <?php
 }
-
 // ============================================
 // ADMIN POST: Save Notes
 // ============================================
