@@ -90,9 +90,29 @@ function bod_create_signup_checkout($owner_data) {
         $success_url = home_url('/business-owner-signup-success/?session_id={CHECKOUT_SESSION_ID}&type=signup');
         $cancel_url  = home_url('/list-your-business/?cancelled=1');
 
-        // Use display amount (incl. GST) directly — avoids recurring price ID conflict
-        $amount_display = (float) (defined('BOD_LISTING_AMOUNT_DISPLAY') ? BOD_LISTING_AMOUNT_DISPLAY : get_option('bod_listing_amount_display', 35));
-        $amount_cents   = (int) round($amount_display * 100);
+        // Read charge amount from active crs_sub_plan CPT — falls back to constant
+        $amount_display = 0;
+        $plan_name      = 'Business Listing — Monthly Subscription';
+
+        $plans = get_posts( [
+            'post_type'      => 'crs_sub_plan',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'orderby'        => 'date',
+            'order'          => 'ASC',
+            'meta_query'     => [ [ 'key' => '_plan_status', 'value' => 'active' ] ],
+        ] );
+
+        if ( ! empty( $plans ) ) {
+            $amount_display = (float) get_post_meta( $plans[0]->ID, '_plan_charge_amount', true );
+            $plan_name      = $plans[0]->post_title;
+        }
+
+        if ( ! $amount_display ) {
+            $amount_display = (float) (defined('BOD_LISTING_AMOUNT_DISPLAY') ? BOD_LISTING_AMOUNT_DISPLAY : get_option('bod_listing_amount_display', 35));
+        }
+
+        $amount_cents = (int) round( $amount_display * 100 );
 
         // Build line item using inline price (no price ID needed)
         $line_item = [
@@ -100,7 +120,7 @@ function bod_create_signup_checkout($owner_data) {
                 'currency'     => 'aud',
                 'unit_amount'  => $amount_cents,
                 'product_data' => [
-                    'name'        => 'Business Listing — Monthly Subscription',
+                    'name'        => $plan_name,
                     'description' => 'Monthly listing on ComputerRepairServices.com.au (incl. GST)',
                 ],
             ],

@@ -22,7 +22,155 @@ function bod_send_email( $to, $subject, $message, $extra_headers = [], $attachme
     $headers = array_merge( $headers, (array) $extra_headers );
     return wp_mail( $to, $subject, $message, $headers, $attachments );
 }
+/**
+ * Generate invoice PDF using crs_generate_invoice_html() from mu-plugin
+ * Falls back to self-contained HTML if mu-plugin not available
+ *
+ * @param array $invoice  Invoice data array
+ * @return string|false   PDF file path or false
+ */
+function bod_build_invoice_pdf( $invoice ) {
+    $dompdf_autoload = BOD_PLUGIN_DIR . 'vendor/autoload.php';
+    if ( ! file_exists( $dompdf_autoload ) ) {
+        error_log( '[BOD Invoice] dompdf not found at: ' . $dompdf_autoload );
+        return false;
+    }
 
+    require_once $dompdf_autoload;
+    if ( ! class_exists( 'Dompdf\Dompdf' ) ) {
+        error_log( '[BOD Invoice] Dompdf class not found' );
+        return false;
+    }
+
+    // ── Build invoice data ────────────────────────────────────────────
+    if ( function_exists( 'crs_create_invoice_data_for_listing_payment' ) ) {
+        // Use mu-plugin builder — branded, consistent with rest of site
+        $invoice_data = crs_create_invoice_data_for_listing_payment(
+            $invoice['owner_name'],
+            $invoice['owner_email'],
+            $invoice['owner_phone'],
+            $invoice['amount'],
+            $invoice['description'],
+            $invoice['reference'],
+            $invoice['owner_id'] ?? 0
+        );
+
+        // Override invoice number with the one from CRS_Subscriptions
+        $invoice_data['invoice_number']  = $invoice['invoice_num'];
+        $invoice_data['plan_name']       = $invoice['description'];
+        $invoice_data['billing_period']  = 'Monthly';
+
+        // Override GST if plan has custom rate (not always 10%)
+        if ( isset( $invoice['base'] ) && isset( $invoice['gst'] ) ) {
+            $invoice_data['subtotal']      = number_format( $invoice['base'], 2 );
+            $invoice_data['gst']           = number_format( $invoice['gst'], 2 );
+            $invoice_data['total_amount']  = number_format( $invoice['amount'], 2 );
+            $invoice_data['unit_price']    = number_format( $invoice['base'], 2 );
+            $invoice_data['total']         = number_format( $invoice['base'], 2 );
+        }
+
+        $html = function_exists( 'crs_generate_invoice_html' )
+            ? crs_generate_invoice_html( $invoice_data )
+            : false;
+
+    } else {
+        $html = false;
+    }
+
+    // ── Fallback: self-contained HTML if mu-plugin not available ──────
+    if ( ! $html ) {
+        $site_name = get_bloginfo( 'name' );
+        $abn       = get_option( 'crs_company_abn', '' );
+
+        $html = '<!DOCTYPE html><html><head><meta charset="utf-8">
+        <style>
+          body{font-family:Arial,sans-serif;font-size:13px;color:#333;margin:0;padding:0;}
+          .wrap{max-width:680px;margin:0 auto;padding:36px;}
+          .header{display:table;width:100%;margin-bottom:30px;}
+          .hl{display:table-cell;vertical-align:top;}
+          .hr{display:table-cell;vertical-align:top;text-align:right;}
+          .brand{font-size:20px;font-weight:700;color:#0a2647;}
+          .inv-title{font-size:24px;font-weight:700;color:#0a2647;}
+          .inv-meta{font-size:12px;color:#666;margin-top:4px;line-height:1.7;}
+          .parties{display:table;width:100%;margin-bottom:24px;}
+          .pf{display:table-cell;width:50%;vertical-align:top;}
+          .pl{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#999;margin-bottom:5px;font-weight:700;}
+          .pn{font-size:14px;font-weight:700;color:#0a2647;}
+          .pd{font-size:12px;color:#555;line-height:1.6;}
+          table.items{width:100%;border-collapse:collapse;margin-bottom:18px;}
+          table.items th{background:#0a2647;color:#fff;padding:9px 12px;font-size:12px;text-align:left;}
+          table.items td{padding:10px 12px;border-bottom:1px solid #f0f0f0;font-size:13px;}
+          .totals{width:240px;margin-left:auto;border-collapse:collapse;margin-bottom:24px;}
+          .totals td{padding:7px 10px;font-size:13px;}
+          .totals .lbl{color:#666;}
+          .totals .tr td{font-weight:700;font-size:15px;color:#0a2647;background:#eaf1fc;padding:10px;}
+          .paid{display:inline-block;border:3px solid #28a745;color:#28a745;font-size:16px;font-weight:700;padding:5px 16px;border-radius:4px;letter-spacing:2px;}
+          .footer{text-align:center;font-size:11px;color:#aaa;margin-top:28px;padding-top:14px;border-top:1px solid #eee;}
+        </style>
+        </head><body><div class="wrap">
+          <div class="header">
+            <div class="hl">
+              <div class="brand">' . esc_html( $site_name ) . '</div>
+              ' . ( $abn ? '<div style="font-size:11px;color:#888;">ABN: ' . esc_html( $abn ) . '</div>' : '' ) . '
+            </div>
+            <div class="hr">
+              <div class="inv-title">TAX INVOICE</div>
+              <div class="inv-meta">
+                Invoice #: <strong>' . esc_html( $invoice['invoice_num'] ) . '</strong><br>
+                Date: ' . esc_html( $invoice['date'] ) . '<br>
+                <span class="paid">PAID</span>
+              </div>
+            </div>
+          </div>
+          <div class="parties">
+            <div class="pf">
+              <div class="pl">From</div>
+              <div class="pn">' . esc_html( $site_name ) . '</div>
+            </div>
+            <div class="pf">
+              <div class="pl">Billed To</div>
+              <div class="pn">' . esc_html( $invoice['owner_name'] ) . '</div>
+              <div class="pd">
+                ' . ( $invoice['business_name'] ? esc_html( $invoice['business_name'] ) . '<br>' : '' ) . '
+                ' . esc_html( $invoice['owner_email'] ) . '<br>
+                ' . esc_html( $invoice['owner_phone'] ?? '' ) . '
+              </div>
+            </div>
+          </div>
+          <table class="items">
+            <thead><tr><th>Description</th><th style="text-align:right;width:140px;">Amount (AUD)</th></tr></thead>
+            <tbody>
+              <tr><td>' . esc_html( $invoice['description'] ) . '</td><td style="text-align:right;">$' . number_format( $invoice['base'], 2 ) . '</td></tr>
+              <tr><td style="color:#666;">GST (' . esc_html( $invoice['tax_rate'] ) . '%)</td><td style="text-align:right;color:#666;">$' . number_format( $invoice['gst'], 2 ) . '</td></tr>
+            </tbody>
+          </table>
+          <table class="totals">
+            <tr><td class="lbl">Subtotal</td><td style="text-align:right;">$' . number_format( $invoice['base'], 2 ) . '</td></tr>
+            <tr><td class="lbl">GST</td><td style="text-align:right;">$' . number_format( $invoice['gst'], 2 ) . '</td></tr>
+            <tr class="tr"><td>Total Charged</td><td style="text-align:right;">$' . number_format( $invoice['amount'], 2 ) . ' AUD</td></tr>
+          </table>
+          ' . ( $invoice['reference'] ? '<p style="font-size:11px;color:#aaa;">Payment Reference: ' . esc_html( $invoice['reference'] ) . '</p>' : '' ) . '
+          <div class="footer">Tax invoice for GST purposes &mdash; &copy; ' . date('Y') . ' ' . esc_html( $site_name ) . '</div>
+        </div></body></html>';
+    }
+
+    // ── Render PDF ────────────────────────────────────────────────────
+    $dompdf = new \Dompdf\Dompdf( [ 'isHtml5ParserEnabled' => true, 'isRemoteEnabled' => false ] );
+    $dompdf->loadHtml( $html );
+    $dompdf->setPaper( 'A4', 'portrait' );
+    $dompdf->render();
+
+    $upload_dir = wp_upload_dir();
+    $pdf_dir    = trailingslashit( $upload_dir['basedir'] ) . 'bod-invoices/';
+    if ( ! is_dir( $pdf_dir ) ) {
+        wp_mkdir_p( $pdf_dir );
+    }
+
+    $filename = $pdf_dir . 'invoice-' . sanitize_file_name( $invoice['invoice_num'] ) . '-' . time() . '.pdf';
+    file_put_contents( $filename, $dompdf->output() );
+
+    return file_exists( $filename ) ? $filename : false;
+}
 // ============================================
 // INVOICE PDF GENERATION
 // Uses crs_generate_invoice_html() (CFS-style) from the mu-plugin + dompdf.

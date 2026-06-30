@@ -19,18 +19,9 @@ class CRS_Subscriptions {
        INIT
        ==================================================================== */
     public static function init() {
+        // Cron callbacks only — scheduling moved to CRS_Migrations::schedule_crons()
         add_action( 'crs_daily_renewal_check', [ __CLASS__, 'run_renewal_check' ] );
         add_action( 'crs_daily_grace_check',   [ __CLASS__, 'run_grace_check'   ] );
-        add_action( 'init',                    [ __CLASS__, 'schedule_crons'    ] );
-    }
-
-    public static function schedule_crons() {
-        if ( ! wp_next_scheduled( 'crs_daily_renewal_check' ) ) {
-            wp_schedule_event( strtotime( 'today 08:00:00' ), 'daily', 'crs_daily_renewal_check' );
-        }
-        if ( ! wp_next_scheduled( 'crs_daily_grace_check' ) ) {
-            wp_schedule_event( strtotime( 'today 09:00:00' ), 'daily', 'crs_daily_grace_check' );
-        }
     }
 
     /* ====================================================================

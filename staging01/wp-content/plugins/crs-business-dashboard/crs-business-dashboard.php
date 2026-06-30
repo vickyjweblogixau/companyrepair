@@ -44,19 +44,21 @@ register_activation_hook( __FILE__, 'crs_activate' );
 register_deactivation_hook( __FILE__, 'crs_deactivate' );
 
 function crs_activate() {
-    // Register CPT + taxonomies first so rewrite rules exist
+    // Register CPT + taxonomies first so rewrite rules + CPTs exist
     require_once CRS_PLUGIN_DIR . 'inc/class-crs-setup.php';
+    require_once CRS_PLUGIN_DIR . 'inc/class-crs-migrations.php';
+
     CRS_Setup::register_cpt();
     CRS_Setup::register_taxonomies();
+    CRS_Setup::register_subscription_plan_cpt();
+    CRS_Setup::register_subscription_cpts();
     CRS_Setup::create_roles();
     CRS_Setup::create_enquiries_table();
     CRS_Setup::insert_default_terms();
     update_option( 'crs_repair_service_parents_v1', true );
 
-    // One-time slug migration on activation
-    if ( ! get_option( 'crs_state_slugs_v2' ) ) {
-        CRS_Setup::migrate_state_slugs();
-    }
+    // All one-time migrations — runs everything in class-crs-migrations.php
+    CRS_Migrations::run_all();
 
     // Ensure admin caps are set on activation
     crs_ensure_admin_caps();
@@ -107,7 +109,8 @@ function crs_load_plugin() {
         'inc/class-crs-email.php',      // Custom rewrite rules
         'inc/class-crs-image-handler.php',  // Enquiry image handler
         'inc/class-crs-enquiry-form.php',  // Enquiry image handler
-        'inc/class-crs-cache-manager.php', // Cache manager
+         'inc/class-crs-cache-manager.php', // Cache manager
+        'inc/class-crs-migrations.php', // Migrations
 
     ];
 

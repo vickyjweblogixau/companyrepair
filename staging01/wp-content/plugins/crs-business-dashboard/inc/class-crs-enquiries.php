@@ -189,30 +189,5 @@ function crs_send_enquiry_notification( $enquiry_id, $business_id ) {
    DB UPGRADE — adds subject, postcode, region, state, finance_amount
    Version 1.2
    ==================================================================== */
-add_action( 'admin_init', function () {
-    if ( get_option( 'crs_enquiries_table_version' ) !== '1.2' ) {
-        crs_upgrade_enquiries_table_v2();
-    }
-} );
 
-function crs_upgrade_enquiries_table_v2() {
-    global $wpdb;
-    $table    = $wpdb->prefix . 'crs_enquiries';
-    $existing = $wpdb->get_col( "DESC {$table}", 0 );
 
-    $columns = [
-        'subject'        => "ALTER TABLE {$table} ADD COLUMN subject VARCHAR(200) DEFAULT '' AFTER service",
-        'postcode'       => "ALTER TABLE {$table} ADD COLUMN postcode VARCHAR(10) DEFAULT '' AFTER suburb",
-        'region'         => "ALTER TABLE {$table} ADD COLUMN region VARCHAR(100) DEFAULT '' AFTER postcode",
-        'state'          => "ALTER TABLE {$table} ADD COLUMN state VARCHAR(100) DEFAULT '' AFTER region",
-        'finance_amount' => "ALTER TABLE {$table} ADD COLUMN finance_amount DECIMAL(10,2) DEFAULT NULL AFTER contact_pref",
-    ];
-
-    foreach ( $columns as $col => $sql ) {
-        if ( ! in_array( $col, $existing, true ) ) {
-            $wpdb->query( $sql );
-        }
-    }
-
-    update_option( 'crs_enquiries_table_version', '1.2' );
-}

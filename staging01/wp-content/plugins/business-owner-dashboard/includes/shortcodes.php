@@ -9,6 +9,80 @@ if (!defined('ABSPATH')) exit;
 // ============================================
 
 // Dynamic data for signup form fields
+// ============================================
+// GET ACTIVE SUBSCRIPTION PLAN FROM CPT
+// Reads from crs_sub_plan post type (set by admin)
+// Falls back to BOD_LISTING_AMOUNT_DISPLAY if no plan found
+// ============================================
+function bod_get_active_signup_plan() {
+    // Try to get the active plan from crs_sub_plan CPT
+    $plans = get_posts( [
+        'post_type'      => 'crs_sub_plan',
+        'post_status'    => 'publish',
+        'posts_per_page' => 1,
+        'orderby'        => 'date',
+        'order'          => 'ASC',
+        'meta_query'     => [
+            [
+                'key'   => '_plan_status',
+                'value' => 'active',
+            ],
+        ],
+    ] );
+
+    if ( empty( $plans ) ) {
+        // Fallback to options if no CPT plan found
+        return [
+            'id'          => 0,
+            'name'        => get_option( 'bod_plan_name', 'Simple Subscription' ),
+            'price'       => (float) get_option( 'bod_listing_amount_display', 20.00 ),
+            'tax_type'    => get_option( 'bod_plan_gst_type', 'exclude' ),
+            'tax_rate'    => (float) get_option( 'bod_plan_gst_rate', 10 ),
+            'charge'      => (float) get_option( 'bod_listing_amount_display', 20.00 ),
+            'gst'         => 0,
+            'base'        => (float) get_option( 'bod_listing_amount_display', 20.00 ),
+            'features'    => [],
+            'duration'    => '30',
+        ];
+    }
+
+    $plan     = $plans[0];
+    $price    = (float) get_post_meta( $plan->ID, '_plan_price',         true );
+    $tax_rate = (float) get_post_meta( $plan->ID, '_plan_tax_rate',      true );
+    $tax_type =         get_post_meta( $plan->ID, '_plan_tax_type',      true ) ?: 'exclude';
+    $charge   = (float) get_post_meta( $plan->ID, '_plan_charge_amount', true );
+    $gst      = (float) get_post_meta( $plan->ID, '_plan_tax_amount',    true );
+    $duration =         get_post_meta( $plan->ID, '_plan_duration',      true ) ?: '30';
+    $features_raw = get_post_meta( $plan->ID, '_plan_features', true ) ?: '';
+    $features = array_filter( array_map( 'trim', explode( "\n", $features_raw ) ) );
+
+    // Calculate if not stored yet
+    if ( ! $charge && $price ) {
+        if ( $tax_type === 'exclude' ) {
+            $charge = round( $price * ( 1 + $tax_rate / 100 ), 2 );
+            $gst    = round( $charge - $price, 2 );
+        } else {
+            $charge = $price;
+            $gst    = round( $price - ( $price / ( 1 + $tax_rate / 100 ) ), 2 );
+        }
+    }
+    $base = round( $charge - $gst, 2 );
+
+    return [
+        'id'       => $plan->ID,
+        'name'     => $plan->post_title,
+        'price'    => $price,
+        'tax_type' => $tax_type,
+        'tax_rate' => $tax_rate,
+        'charge'   => $charge,
+        'gst'      => $gst,
+        'base'     => $base,
+        'features' => array_values( $features ),
+        'duration' => $duration,
+    ];
+}
+
+// Dynamic data for signup form fields
 function bod_get_service_radius_options() {
     return [
         ''              => 'Select service radius',
@@ -100,7 +174,8 @@ function bod_render_signup_form($atts) {
         </div>';
     }
 
-    $amount   = BOD_LISTING_AMOUNT_DISPLAY;
+    $plan     = bod_get_active_signup_plan();
+    $amount   = $plan['charge'] > 0 ? $plan['charge'] : BOD_LISTING_AMOUNT_DISPLAY;
     $services = bod_get_services_list();
     $radii    = bod_get_service_radius_options();
 
@@ -640,6 +715,9 @@ function bod_render_success_page($atts) {
 // ============================================
 // DASHBOARD [business_owner_dashboard]
 // ============================================
+// ============================================
+// DASHBOARD [business_owner_dashboard]
+// ============================================
 add_shortcode('business_owner_dashboard', 'bod_render_dashboard_shortcode');
 function bod_render_dashboard_shortcode($atts) {
     if (!is_user_logged_in()) {
@@ -662,58 +740,73 @@ function bod_render_dashboard_shortcode($atts) {
     if (!$owner) return '<p>No owner account found.</p>';
     return '<p>Welcome, ' . esc_html($owner->owner_name) . '! Dashboard template not found.</p>';
 }
+// ============================================
+// LOGIN AJAX HANDLER
+// ============================================
+add_action('wp_ajax_nopriv_bod_ajax_login', 'bod_handle_ajax_login');
+add_action('wp_ajax_bod_ajax_login',        'bod_handle_ajax_login');
+function bod_handle_ajax_login() {
+    if (!check_ajax_referer('bod_ajax_login_nonce', 'nonce', false)) {
+        wp_send_json_error(['message' => 'Security check failed. Please refresh the page.']);
+    }
+
+    $user = wp_signon([
+        'user_login'    => sanitize_text_field($_POST['log'] ?? ''),
+        'user_password' => $_POST['pwd'] ?? '',
+        'remember'      => !empty($_POST['rememberme']),
+    ], is_ssl());
+
+    if (is_wp_error($user)) {
+        wp_send_json_error(['message' => 'Invalid username or password. Please try again.']);
+    }
+
+    // Success — determine redirect
+    $redirect = home_url('/business-owner-dashboard/');
+    if (!empty($_POST['redirect_to'])) {
+        $redirect = esc_url_raw($_POST['redirect_to']);
+    }
+    wp_send_json_success(['redirect' => $redirect]);
+}
 
 // ============================================
-// LOGIN [business_owner_login]
+// LOGIN SHORTCODE [business_owner_login]
 // ============================================
 add_shortcode('business_owner_login', 'bod_render_login_shortcode');
 function bod_render_login_shortcode($atts) {
     if (is_user_logged_in() && bod_is_business_owner()) {
-        wp_redirect(home_url('/business-owner-dashboard/'));
-        exit;
+        return '<p style="text-align:center;padding:20px;">You are already logged in. 
+            <a href="' . home_url('/business-owner-dashboard/') . '" style="color:#1565d8;">Go to Dashboard →</a></p>';
     }
 
-    $error = '';
-    if (!empty($_POST['bod_login_submit']) && check_admin_referer('bod_login_action')) {
-        $creds = [
-            'user_login'    => sanitize_text_field($_POST['log'] ?? ''),
-            'user_password' => $_POST['pwd'] ?? '',
-            'remember'      => !empty($_POST['rememberme']),
-        ];
-        $user = wp_signon($creds, is_ssl());
-        if (is_wp_error($user)) {
-            $error = 'Invalid username or password.';
-        } else {
-            wp_redirect(home_url('/business-owner-dashboard/'));
-            exit;
-        }
-    }
+    $redirect_to = isset($_GET['redirect_to']) ? esc_url($_GET['redirect_to']) : '';
 
-    ob_start();
-    ?>
+    ob_start(); ?>
     <div style="max-width:400px;margin:0 auto;padding:40px 20px;font-family:Poppins,sans-serif;">
         <h2 style="text-align:center;margin-bottom:24px;color:#0a2647;">Business Owner Login</h2>
 
-        <?php if ($error) : ?>
-            <div style="background:#fff3f3;border:1px solid #f5c6cb;border-radius:6px;padding:12px;margin-bottom:16px;color:#721c24;"><?php echo esc_html($error); ?></div>
-        <?php endif; ?>
+        <div id="bod-login-error" style="display:none;background:#fff3f3;border:1px solid #f5c6cb;border-radius:6px;padding:12px;margin-bottom:16px;color:#721c24;"></div>
 
-        <form method="post" style="background:#fff;border:1px solid #e7ecf3;border-radius:12px;padding:28px;">
-            <?php wp_nonce_field('bod_login_action'); ?>
+        <form id="bod-login-form" style="background:#fff;border:1px solid #e7ecf3;border-radius:12px;padding:28px;">
+            <input type="hidden" name="redirect_to" value="<?php echo esc_attr($redirect_to); ?>">
             <div style="margin-bottom:14px;">
                 <label style="display:block;font-weight:600;margin-bottom:6px;">Username or Email</label>
-                <input type="text" name="log" required style="width:100%;padding:10px;border:1px solid #e7ecf3;border-radius:6px;font-size:15px;box-sizing:border-box;">
+                <input type="text" name="log" id="bod-log" required
+                       style="width:100%;padding:10px;border:1px solid #e7ecf3;border-radius:6px;font-size:15px;box-sizing:border-box;">
             </div>
             <div style="margin-bottom:20px;">
                 <label style="display:block;font-weight:600;margin-bottom:6px;">Password</label>
-                <input type="password" name="pwd" required style="width:100%;padding:10px;border:1px solid #e7ecf3;border-radius:6px;font-size:15px;box-sizing:border-box;">
+                <input type="password" name="pwd" id="bod-pwd" required
+                       style="width:100%;padding:10px;border:1px solid #e7ecf3;border-radius:6px;font-size:15px;box-sizing:border-box;">
             </div>
             <div style="margin-bottom:20px;">
                 <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
                     <input type="checkbox" name="rememberme"> Remember me
                 </label>
             </div>
-            <button type="submit" name="bod_login_submit" style="width:100%;padding:12px;background:#1565d8;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;">Login</button>
+            <button type="submit" id="bod-login-btn"
+                    style="width:100%;padding:12px;background:#1565d8;color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:700;cursor:pointer;">
+                Login
+            </button>
             <p style="text-align:center;margin-top:16px;">
                 <a href="<?php echo wp_lostpassword_url(); ?>" style="color:#1565d8;">Forgot your password?</a>
             </p>
@@ -722,6 +815,95 @@ function bod_render_login_shortcode($atts) {
             Not a business owner yet? <a href="<?php echo home_url('/list-your-business/'); ?>" style="color:#1565d8;">Sign up here</a>
         </p>
     </div>
+
+    <script>
+    document.getElementById('bod-login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        var btn   = document.getElementById('bod-login-btn');
+        var error = document.getElementById('bod-login-error');
+        var form  = this;
+
+        btn.disabled    = true;
+        btn.textContent = 'Logging in…';
+        error.style.display = 'none';
+
+        var data = new FormData();
+        data.append('action',      'bod_ajax_login');
+        data.append('nonce',       '<?php echo wp_create_nonce('bod_ajax_login_nonce'); ?>');
+        data.append('log',         document.getElementById('bod-log').value);
+        data.append('pwd',         document.getElementById('bod-pwd').value);
+        data.append('rememberme',  form.querySelector('[name=rememberme]').checked ? '1' : '');
+        data.append('redirect_to', form.querySelector('[name=redirect_to]').value);
+
+        fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
+            method: 'POST',
+            body: data
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.success) {
+                btn.textContent = 'Redirecting…';
+                window.location.href = res.data.redirect;
+            } else {
+                error.textContent    = res.data.message;
+                error.style.display  = 'block';
+                btn.disabled         = false;
+                btn.textContent      = 'Login';
+            }
+        })
+        .catch(() => {
+            error.textContent   = 'Something went wrong. Please try again.';
+            error.style.display = 'block';
+            btn.disabled        = false;
+            btn.textContent     = 'Login';
+        });
+    });
+    </script>
     <?php
     return ob_get_clean();
 }
+
+// ============================================
+// LOGIN [business_owner_login]
+// ============================================
+// ============================================
+// LOGIN FORM PROCESSING — runs before headers sent
+// ============================================
+/* 
+add_action('template_redirect', 'bod_process_login_form');
+function bod_process_login_form() {
+    // Redirect already-logged-in business owners away from login page
+    $login_page_id = (int) get_option('bod_login_page_id');
+    if ($login_page_id && is_page($login_page_id) && is_user_logged_in() && bod_is_business_owner()) {
+        wp_redirect(home_url('/business-owner-dashboard/'));
+        exit;
+    }
+
+    // Only process on POST submission
+    if (empty($_POST['bod_login_submit'])) return;
+
+    // Nonce check — show error in transient instead of wp_die
+    if (empty($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'bod_login_action')) {
+        set_transient('bod_login_error_' . md5(session_id() . $_SERVER['REMOTE_ADDR']), 'Security check failed. Please refresh and try again.', 60);
+        return;
+    }
+
+    $creds = [
+        'user_login'    => sanitize_text_field($_POST['log'] ?? ''),
+        'user_password' => $_POST['pwd'] ?? '',
+        'remember'      => !empty($_POST['rememberme']),
+    ];
+    $user = wp_signon($creds, is_ssl());
+
+    if (is_wp_error($user)) {
+        set_transient('bod_login_error_' . md5(session_id() . $_SERVER['REMOTE_ADDR']), 'Invalid username or password.', 60);
+    } else {
+        // Successful login — safe redirect here (before HTML)
+        $redirect = isset($_GET['redirect_to']) ? esc_url_raw($_GET['redirect_to']) : home_url('/business-owner-dashboard/');
+        wp_redirect($redirect);
+        exit;
+    }
+} */
+
+

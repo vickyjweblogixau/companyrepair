@@ -20,6 +20,7 @@ defined( 'ABSPATH' ) || exit;
 /* ======================================================================
    DB UPGRADE — add contact_time column if missing
    ==================================================================== */
+/*   
 add_action( 'admin_init', function () {
     if ( get_option( 'crs_enquiries_table_version' ) !== '1.3' ) {
         global $wpdb;
@@ -40,7 +41,7 @@ add_action( 'admin_init', function () {
         }
         update_option( 'crs_enquiries_table_version', '1.3' );
     }
-} );
+} ); */
 
 /* ======================================================================
    ENQUEUE — nonce available to JS on enquiry pages only
