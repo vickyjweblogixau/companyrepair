@@ -22,6 +22,7 @@ class CRS_Subscriptions {
         // Cron callbacks only — scheduling moved to CRS_Migrations::schedule_crons()
         add_action( 'crs_daily_renewal_check', [ __CLASS__, 'run_renewal_check' ] );
         add_action( 'crs_daily_grace_check',   [ __CLASS__, 'run_grace_check'   ] );
+        add_action( 'crs_daily_boost_renewal_check', [ __CLASS__, 'run_boost_renewal_check' ] );
     }
 
     /* ====================================================================
@@ -54,10 +55,16 @@ class CRS_Subscriptions {
             error_log( '[CRS Sub] Failed to create subscription post for owner #' . $owner_id );
             return '';
         }
+        // Look up the actual default signup plan post, so this subscription
+        // links to a real crs_sub_plan post (needed for the admin dropdown
+        // to show the correct selection — _sub_plan was only ever a text
+        // label like "monthly" and never matched any plan post).
+        $default_plan_id = (int) get_option( 'bod_default_signup_plan_id' );
 
         // Store all subscription info as post meta
         $sub_meta = [
             '_sub_owner_id'      => $owner_id,
+            '_sub_plan_id'       => $default_plan_id,
             '_sub_plan'          => $plan,
             '_sub_base_price'    => get_option( 'bod_listing_base_price', 20 ),
             '_sub_gst_rate'      => $gst_rate,
@@ -185,7 +192,7 @@ class CRS_Subscriptions {
     /* ====================================================================
        RENEWAL — WP-Cron daily check
        ==================================================================== */
-    public static function run_renewal_check() {
+    /*public static function run_renewal_check() {
         $today = current_time( 'Y-m-d' );
 
         $subs = get_posts( [
@@ -206,6 +213,35 @@ class CRS_Subscriptions {
             $owner_id = (int) get_post_meta( $sub->ID, '_sub_owner_id', true );
             self::charge_renewal( $owner_id, $sub );
         }
+    } */
+    public static function run_renewal_check() {
+        $today = current_time( 'Y-m-d' );
+        error_log( "[CRS Cron] run_renewal_check() STARTED at " . current_time( 'mysql' ) . " (today={$today})" );
+
+        $subs = get_posts( [
+            'post_type'      => 'crs_sub',
+            'post_status'    => 'sub_active',
+            'posts_per_page' => -1,
+            'meta_query'     => [
+                [
+                    'key'     => '_sub_renewal_date',
+                    'value'   => $today,
+                    'compare' => '<=',
+                    'type'    => 'DATE',
+                ],
+            ],
+        ] );
+
+        error_log( "[CRS Cron] Found " . count( $subs ) . " subscription(s) due for renewal." );
+
+        foreach ( $subs as $sub ) {
+            $owner_id = (int) get_post_meta( $sub->ID, '_sub_owner_id', true );
+            $renewal  = get_post_meta( $sub->ID, '_sub_renewal_date', true );
+            error_log( "[CRS Cron] Processing sub #{$sub->ID} (owner #{$owner_id}), renewal_date={$renewal}" );
+            self::charge_renewal( $owner_id, $sub );
+        }
+
+        error_log( "[CRS Cron] run_renewal_check() FINISHED." );
     }
 
     public static function charge_renewal( $owner_id, $sub_post = null ) {
@@ -409,6 +445,96 @@ class CRS_Subscriptions {
             '<span style="display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;color:%1$s;background:%1$s1a;">%2$s</span>',
             $color, esc_html( $label )
         );
+    }
+    public static function run_boost_renewal_check() {
+        global $wpdb;
+        $today = current_time('mysql');
+
+        $businesses = $wpdb->get_results($wpdb->prepare(
+            "SELECT post_id, meta_value FROM {$wpdb->postmeta} WHERE meta_key = '_active_boosts'"
+        ));
+
+        foreach ($businesses as $row) {
+            $boosts = maybe_unserialize($row->meta_value);
+            if (!is_array($boosts)) continue;
+
+            foreach ($boosts as $boost_key => $data) {
+                if (strtotime($data['renewal_date']) > strtotime($today)) continue; // not due yet
+                self::charge_boost_renewal($row->post_id, $boost_key, $data);
+            }
+        }
+    }
+
+    public static function charge_boost_renewal($business_id, $boost_key, $data) {
+        $owner_id = (int) $data['owner_id'];
+        $owner    = bod_get_owner($owner_id);
+        if (!$owner || empty($owner->stripe_customer_id)) return;
+
+        $amount_cents = (int) round((float) $data['charge'] * 100);
+        if ($amount_cents <= 0) return;
+
+        if (!class_exists('\Stripe\Stripe')) {
+            $autoload = defined('BOD_PLUGIN_DIR') ? BOD_PLUGIN_DIR . 'vendor/autoload.php' : '';
+            if ($autoload && file_exists($autoload)) require_once $autoload;
+        }
+        \Stripe\Stripe::setApiKey(defined('BOD_STRIPE_SECRET_KEY') ? BOD_STRIPE_SECRET_KEY : get_option('bod_stripe_secret_key', ''));
+
+        $boosts = get_post_meta($business_id, '_active_boosts', true);
+
+        // If owner already cancelled auto-renew, just let it expire and clear it
+        if (empty($data['auto_renew'])) {
+            unset($boosts[$boost_key]);
+            update_post_meta($business_id, '_active_boosts', $boosts);
+            return;
+        }
+
+        try {
+            $customer = \Stripe\Customer::retrieve($owner->stripe_customer_id);
+            $pm = $customer->invoice_settings->default_payment_method ?? null;
+            if (!$pm) {
+                $methods = \Stripe\PaymentMethod::all(['customer' => $owner->stripe_customer_id, 'type' => 'card']);
+                $pm = !empty($methods->data) ? $methods->data[0]->id : null;
+            }
+            if (!$pm) {
+                error_log("[CRS Boost] No payment method for owner #{$owner_id}, boost {$boost_key} not renewed.");
+                return; // boost just expires, no charge, no card on file
+            }
+
+            $pi = \Stripe\PaymentIntent::create([
+                'amount'         => $amount_cents,
+                'currency'       => 'aud',
+                'customer'       => $owner->stripe_customer_id,
+                'payment_method' => $pm,
+                'confirm'        => true,
+                'off_session'    => true,
+                'description'    => ucfirst($boost_key) . ' boost renewal — ' . ($owner->business_name ?: $owner->owner_name),
+                'metadata'       => ['owner_id' => $owner_id, 'business_id' => $business_id, 'source' => 'boost_renewal', 'boost' => $boost_key],
+            ]);
+
+            if ($pi->status === 'succeeded') {
+                $duration = (int) get_post_meta($data['plan_id'], '_plan_duration', true) ?: 30;
+                $boosts[$boost_key]['renewal_date'] = date('Y-m-d H:i:s', strtotime("+{$duration} days"));
+                update_post_meta($business_id, '_active_boosts', $boosts);
+
+                $invoice_num = self::generate_invoice_number($owner_id);
+                self::create_order([
+                    'owner_id'    => $owner_id,
+                    'type'        => 'boost',
+                    'amount'      => $data['charge'],
+                    'gst'         => 0,
+                    'base_amount' => $data['charge'],
+                    'stripe_pi'   => $pi->id,
+                    'invoice_num' => $invoice_num,
+                ]);
+                error_log("[CRS Boost] Renewed {$boost_key} for business #{$business_id}. Invoice: {$invoice_num}");
+            } else {
+                unset($boosts[$boost_key]); // failed charge — boost expires
+                update_post_meta($business_id, '_active_boosts', $boosts);
+                error_log("[CRS Boost] Renewal failed for {$boost_key}, business #{$business_id}.");
+            }
+        } catch (\Throwable $e) {
+            error_log("[CRS Boost] Renewal error business #{$business_id}, boost {$boost_key}: " . $e->getMessage());
+        }
     }
 }
 

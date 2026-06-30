@@ -145,3 +145,9 @@ function crs_save_cf7_enquiry_to_db( $contact_form, $result ) {
 add_filter( 'wpcf7_upload_file_size_limit', function( $bytes ) {
     return 10 * 1024 * 1024; // 10 MB
 });
+/* 
+add_action('admin_notices', function() {
+    if (!current_user_can('manage_options')) return;
+    $next = wp_next_scheduled('crs_daily_renewal_check');
+    echo '<div class="notice notice-info"><p>Next renewal cron: ' . ($next ? date('Y-m-d H:i:s', $next) : 'NOT SCHEDULED') . '</p></div>';
+}); */

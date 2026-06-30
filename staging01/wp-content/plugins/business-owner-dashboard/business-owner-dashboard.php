@@ -373,6 +373,7 @@ function bod_add_admin_menu() {
     add_submenu_page('business-owners', 'Pending Payments', 'Pending Payments', 'manage_options', 'business-owners-pending-payments', 'bod_render_pending_payments', 11);
 
     add_submenu_page('business-owners', 'Settings', 'Settings', 'manage_options', 'business-owners-settings', 'bod_render_settings_page', 99);
+    add_submenu_page('business-owners', 'Pending Changes', 'Pending Changes', 'manage_options', 'bod-pending-changes', 'bod_render_pending_changes_admin');
 }
 
 // ============================================
@@ -425,35 +426,56 @@ function bod_admin_enqueue_scripts($hook) {
     ]);
 }
 
-add_action('wp_enqueue_scripts', 'bod_frontend_enqueue_scripts');
-function bod_frontend_enqueue_scripts() {
-    // Dashboard styles (on dashboard page)
+function bod_enqueue_dashboard_assets() {
     $dashboard_page_id = (int) get_option('bod_dashboard_page_id');
-    if ($dashboard_page_id && is_page($dashboard_page_id)) {
-        wp_enqueue_style('bod-style', BOD_PLUGIN_URL . 'assets/css/style.css', [], BOD_VERSION);
-        wp_enqueue_style('bod-dashboard', BOD_PLUGIN_URL . 'assets/css/new-dashboard.css', ['bod-style'], BOD_VERSION);
-        wp_enqueue_style('bod-responsive', BOD_PLUGIN_URL . 'assets/css/responsive.css', ['bod-style'], BOD_VERSION);
-        wp_enqueue_style('bod-crs-theme', BOD_PLUGIN_URL . 'assets/css/crs-theme.css', ['bod-style'], BOD_VERSION);
-    }
+    if (!$dashboard_page_id || !is_page($dashboard_page_id)) return;
 
-    // Signup page scripts
-    $signup_page_id = (int) get_option('bod_signup_page_id');
-    if ($signup_page_id && is_page($signup_page_id)) {
-        wp_enqueue_style('bod-frontend-css', BOD_PLUGIN_URL . 'assets/css/frontend.css', [], BOD_VERSION);
-        wp_enqueue_script('stripe-js', 'https://js.stripe.com/v3/', [], null, true);
-        wp_enqueue_script('bod-signup-js', BOD_PLUGIN_URL . 'assets/js/signup.js', ['jquery', 'stripe-js'], BOD_VERSION, true);
-        wp_localize_script('bod-signup-js', 'bodSignup', [
-            'ajaxUrl'    => admin_url('admin-ajax.php'),
-            'stripeKey'  => BOD_STRIPE_PUBLISHABLE_KEY,
-            'priceId'    => BOD_LISTING_PRICE_ID,
-            'amount'     => BOD_LISTING_AMOUNT_DISPLAY,
-            'nonce'      => wp_create_nonce('bod_signup'),
-            'successUrl' => home_url('/business-owner-signup-success/'),
-            'validateNonce' => wp_create_nonce('bod_validate_email'),
+    // ── CSS ──────────────────────────────────────────────────────────
+    wp_enqueue_style('bootstrap-icons', 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css', [], '1.11.3');
+    wp_enqueue_style('flatpickr-css',   'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css', [], null);
+    wp_enqueue_style('bod-style',      BOD_PLUGIN_URL . 'assets/css/style.css',         [], BOD_VERSION);
+    wp_enqueue_style('bod-dashboard',  BOD_PLUGIN_URL . 'assets/css/new-dashboard.css', ['bod-style'], BOD_VERSION);
+    wp_enqueue_style('bod-responsive', BOD_PLUGIN_URL . 'assets/css/responsive.css',    ['bod-style'], BOD_VERSION);
+    wp_enqueue_style('bod-crs-theme',  BOD_PLUGIN_URL . 'assets/css/crs-theme.css',     ['bod-style'], BOD_VERSION);
 
-        ]);
-    }
+    // ── JS — flatpickr loads first, our dashboard.js depends on it ───
+    wp_enqueue_script('flatpickr-js', 'https://cdn.jsdelivr.net/npm/flatpickr', [], null, true);
+    wp_enqueue_script(
+        'bod-dashboard-js',
+        BOD_PLUGIN_URL . 'assets/js/dashboard.js',
+        ['jquery', 'flatpickr-js'],
+        BOD_VERSION,
+        true   // load in footer, after DOM is ready
+    );
+
+    // ── Real data passed from PHP → available in JS as `bodDashboardData` ──
+    $owner = bod_get_current_owner();
+    $owner_id = $owner ? $owner->id : 0;
+
+    // Profile completeness — recompute from real fields instead of hardcoding 85
+    $profile_fields = $owner ? [
+        !empty($owner->business_name),
+        !empty($owner->owner_phone),
+        !empty($owner->suburb),
+        !empty($owner->address ?? ''),
+    ] : [];
+    $filled  = count(array_filter($profile_fields));
+    $total_f = max(count($profile_fields), 1);
+    $profile_percent = (int) round(($filled / $total_f) * 100);
+
+    wp_localize_script('bod-dashboard-js', 'bodDashboardData', [
+        'ajaxUrl'           => admin_url('admin-ajax.php'),
+        'nonce'             => wp_create_nonce('bod_dashboard_nonce'),
+        'ownerId'           => $owner_id,
+        'profileRingPercent'=> $profile_percent,
+        'chartRanges'       => [
+            '7'  => bod_get_profile_view_series($owner_id, 7),
+            '14' => bod_get_profile_view_series($owner_id, 14),
+            '30' => bod_get_profile_view_series($owner_id, 30),
+        ],
+    ]);
 }
+add_action('wp_enqueue_scripts', 'bod_enqueue_dashboard_assets');
 
 // ============================================
 // REST API ENDPOINTS (Stripe Webhooks)
@@ -471,6 +493,100 @@ function bod_register_rest_routes() {
         'callback'            => 'bod_rest_validate_email',
         'permission_callback' => '__return_true',
     ]);
+
+    // Activate a boost (off-session charge — card already on file from signup)
+    register_rest_route('business-owners-addons/v1', '/checkout', [
+        'methods'             => 'GET',
+        'callback'            => 'bod_handle_addon_checkout',
+        'permission_callback' => 'is_user_logged_in',
+    ]);
+}
+
+/**
+ * Activate a boost add-on directly — no Stripe Checkout Session needed,
+ * the owner's card is already saved from their original signup
+ * (setup_future_usage: off_session). We charge it immediately, the same
+ * way the monthly renewal cron does.
+ */
+function bod_handle_addon_checkout(WP_REST_Request $request) {
+    $plan_id = (int) $request->get_param('plan_id');
+    $owner   = bod_get_current_owner();
+
+    if (!$owner) {
+        wp_redirect(home_url('/business-owner-login/'));
+        exit;
+    }
+    if (!$plan_id || get_post_type($plan_id) !== 'crs_sub_plan') {
+        wp_die('Invalid add-on plan.');
+    }
+
+    $business_id = bod_get_owner_business_id($owner->id);
+    if (!$business_id) {
+        wp_die('No business listing found for your account.');
+    }
+
+    if (empty($owner->stripe_customer_id)) {
+        wp_redirect(home_url('/business-owner-dashboard/?view=subscription&addon_error=no_customer'));
+        exit;
+    }
+
+    if (!class_exists('\Stripe\Stripe')) bod_init_stripe();
+    \Stripe\Stripe::setApiKey(BOD_STRIPE_SECRET_KEY ?: get_option('bod_stripe_secret_key', ''));
+
+    $charge = (float) get_post_meta($plan_id, '_plan_charge_amount', true);
+    $amount_cents = (int) round($charge * 100);
+
+    try {
+        $customer = \Stripe\Customer::retrieve($owner->stripe_customer_id);
+        $pm = $customer->invoice_settings->default_payment_method ?? null;
+        if (!$pm) {
+            $methods = \Stripe\PaymentMethod::all(['customer' => $owner->stripe_customer_id, 'type' => 'card']);
+            $pm = !empty($methods->data) ? $methods->data[0]->id : null;
+        }
+        if (!$pm) {
+            wp_redirect(home_url('/business-owner-dashboard/?view=subscription&addon_error=no_card'));
+            exit;
+        }
+
+        $pi = \Stripe\PaymentIntent::create([
+            'amount'         => $amount_cents,
+            'currency'       => 'aud',
+            'customer'       => $owner->stripe_customer_id,
+            'payment_method' => $pm,
+            'confirm'        => true,
+            'off_session'    => true,
+            'description'    => get_the_title($plan_id) . ' boost — ' . ($owner->business_name ?: $owner->owner_name),
+            'metadata'       => ['owner_id' => $owner->id, 'business_id' => $business_id, 'plan_id' => $plan_id, 'source' => 'addon_purchase'],
+        ]);
+
+        if ($pi->status === 'succeeded') {
+            $boost_key = sanitize_title(get_the_title($plan_id));
+            bod_activate_boost($business_id, $owner->id, $plan_id, $boost_key);
+
+            if (class_exists('CRS_Subscriptions')) {
+                $invoice_num = CRS_Subscriptions::generate_invoice_number($owner->id);
+                CRS_Subscriptions::create_order([
+                    'owner_id'    => $owner->id,
+                    'type'        => 'boost',
+                    'amount'      => $charge,
+                    'gst'         => 0,
+                    'base_amount' => $charge,
+                    'stripe_pi'   => $pi->id,
+                    'invoice_num' => $invoice_num,
+                ]);
+            }
+
+            wp_redirect(home_url('/business-owner-dashboard/?view=subscription&addon_success=1'));
+            exit;
+        } else {
+            wp_redirect(home_url('/business-owner-dashboard/?view=subscription&addon_error=failed'));
+            exit;
+        }
+    } catch (\Throwable $e) {
+        error_log('[BOD Addon] Checkout error: ' . $e->getMessage());
+        wp_redirect(home_url('/business-owner-dashboard/?view=subscription&addon_error=exception'));
+        exit;
+    }
 }
 // ============================================
 // REST: Validate email (called by signup form JS)
@@ -497,3 +613,26 @@ function bod_rest_validate_email( WP_REST_Request $request ) {
 
     return new WP_REST_Response( [ 'valid' => false, 'message' => $msg ], 200 );
 }
+// Restrict everything below to business_owner role only
+add_action( 'wp_enqueue_scripts', function () {
+
+    // Extra safety: only enqueue on the actual dashboard page
+    if ( ! isset( $_GET['view'] ) && ! is_page( 'business-owner-dashboard' ) ) {
+        return;
+    }
+
+    if ( ! is_user_logged_in() ) {
+        return;
+    }
+
+    $user = wp_get_current_user();
+    if ( ! in_array( 'business_owner', (array) $user->roles, true ) ) {
+        return;
+    }
+
+    $css_file = plugin_dir_path( __FILE__ ) . 'assets/css/sidebar.css';
+    $css_url  = plugin_dir_url( __FILE__ ) . 'assets/css/sidebar.css';
+    $version  = file_exists( $css_file ) ? filemtime( $css_file ) : '1.0';
+
+    wp_enqueue_style( 'business-owner-sidebar', $css_url, array(), $version );
+});

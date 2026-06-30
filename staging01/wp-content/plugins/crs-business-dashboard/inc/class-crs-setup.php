@@ -163,6 +163,7 @@ class CRS_Setup {
         $renewal_type = get_post_meta( $post->ID, '_plan_renewal_type', true ) ?: 'auto';
         $features     = get_post_meta( $post->ID, '_plan_features',     true ) ?: '';
         $plan_status  = get_post_meta( $post->ID, '_plan_status',       true ) ?: 'active';
+        $plan_type    = get_post_meta( $post->ID, '_plan_type', true ) ?: 'subscription';
 
         // Calculate preview
         $p    = (float) $price;
@@ -257,13 +258,34 @@ class CRS_Setup {
                           placeholder="One feature per line e.g.&#10;Standard listing&#10;Featured badge&#10;Homepage visibility"><?php echo esc_textarea( $features ); ?></textarea>
             </div>
 
+            <!-- Status --><!-- Plan Type -->
+            <div class="crs-pl">Plan Type</div>
+            <div class="crs-pf">
+                <select name="_plan_type">
+                    <option value="subscription" <?php selected($plan_type, 'subscription'); ?>>Subscription (main listing plan)</option>
+                    <option value="addon" <?php selected($plan_type, 'addon'); ?>>Add-on / Boost (one-time, shown in Promotions)</option>
+                </select>
+            </div>
+
             <!-- Status -->
+            <!-- Plan Status -->
             <div class="crs-pl">Plan Status</div>
             <div class="crs-pf">
                 <select name="_plan_status">
                     <option value="active"   <?php selected( $plan_status, 'active' );   ?>>Active</option>
                     <option value="inactive" <?php selected( $plan_status, 'inactive' ); ?>>Inactive</option>
                 </select>
+            </div>
+
+            <!-- Default Signup Plan -->
+            <div class="crs-pl">Default Signup Plan</div>
+            <div class="crs-pf">
+                <label>
+                    <input type="checkbox" name="_plan_is_default_signup" value="1"
+                        <?php checked( (int) get_option( 'bod_default_signup_plan_id' ) === $post->ID ); ?>>
+                    Use this plan on the public signup checkout
+                </label>
+                <span style="color:#666;font-size:12px;display:block;"> — only one plan can be the default; checking this unchecks any other plan.</span>
             </div>
 
         </div>
@@ -314,6 +336,7 @@ class CRS_Setup {
             '_plan_renewal_type' => 'text',
             '_plan_features'     => 'textarea',
             '_plan_status'       => 'text',
+            '_plan_type'         => 'text',
         ];
 
         foreach ( $fields as $field => $type ) {
@@ -341,8 +364,15 @@ class CRS_Setup {
         }
         update_post_meta( $post_id, '_plan_charge_amount', $charge );
         update_post_meta( $post_id, '_plan_tax_amount',    $tax    );
-    }
 
+        // Designate this plan as THE default signup plan (only one allowed)
+        if ( ! empty( $_POST['_plan_is_default_signup'] ) ) {
+            update_option( 'bod_default_signup_plan_id', $post_id );
+        } elseif ( (int) get_option( 'bod_default_signup_plan_id' ) === $post_id ) {
+            // Unchecked on the plan that was previously the default — clear it
+            delete_option( 'bod_default_signup_plan_id' );
+        }
+    }
     /* ── Auto-insert 3 default plans on first admin load ─────────────── */
     public static function maybe_insert_default_plans() {
         if ( get_option( 'crs_default_plans_v1' ) ) return;
@@ -1063,6 +1093,32 @@ Enquiry form",
 
         update_option( 'crs_state_slugs_v2', true );
     }
+/* ====================================================================
+       Fix the actual admin list-table QUERY for these CPTs.
+       Registering custom statuses with show_in_admin_all_list fixes the
+       view-link counts, but WP_Query still excludes them from the row
+       results when no explicit status filter is in the URL — this
+       forces all our custom statuses into scope on the "All" view.
+       ==================================================================== */
+    public static function fix_cpt_list_query( $query ) {
+        if ( ! is_admin() || ! $query->is_main_query() ) return;
+
+        $screen_statuses = [
+            'crs_sub'   => [ 'sub_active', 'sub_past_due', 'sub_suspended', 'sub_cancelled' ],
+            'crs_order' => [ 'ord_pending', 'ord_completed', 'ord_failed', 'ord_refunded' ],
+        ];
+
+        $post_type = $query->get( 'post_type' );
+        if ( ! isset( $screen_statuses[ $post_type ] ) ) return;
+
+        // Only override when no explicit status filter was requested
+        // (i.e. the "All" view, or first load with no ?post_status=).
+        if ( empty( $_GET['post_status'] ) ) {
+            $query->set( 'post_status', $screen_statuses[ $post_type ] );
+            $query->set( 'author', '' );          // remove any author restriction
+            $query->set( 'perm', 'readable' );    // show all readable, not just own
+        }
+    }
 
     /* ====================================================================
        Fix "All" count for CPTs with custom post statuses
@@ -1105,5 +1161,37 @@ Enquiry form",
     }
 
 } // end class CRS_Setup
+add_action( 'pre_get_posts', [ 'CRS_Setup', 'fix_cpt_list_query' ] );
+
+// Inject custom statuses into the Publish-box status dropdown for crs_sub
+// and crs_order — WordPress doesn't show registered custom statuses there
+// by default, only Draft/Pending/Published/Private.
+add_action( 'admin_footer-post.php', function() {
+    global $post;
+    if ( ! $post ) return;
+
+    $status_map = [
+        'crs_sub'   => [ 'sub_active' => 'Active', 'sub_past_due' => 'Past Due', 'sub_suspended' => 'Suspended', 'sub_cancelled' => 'Cancelled' ],
+        'crs_order' => [ 'ord_pending' => 'Pending', 'ord_completed' => 'Completed', 'ord_failed' => 'Failed', 'ord_refunded' => 'Refunded' ],
+    ];
+    if ( ! isset( $status_map[ $post->post_type ] ) ) return;
+
+    $current = $post->post_status;
+    ?>
+    <script>
+    jQuery(function($){
+        var $select = $('select#post_status');
+        if (!$select.length) return;
+        <?php foreach ( $status_map[ $post->post_type ] as $value => $label ) : ?>
+        if (!$select.find('option[value="<?php echo esc_js( $value ); ?>"]').length) {
+            $select.append($('<option></option>').attr('value','<?php echo esc_js( $value ); ?>').text('<?php echo esc_js( $label ); ?>'));
+        }
+        <?php endforeach; ?>
+        $select.val('<?php echo esc_js( $current ); ?>');
+        $('#post-status-display').text($select.find('option:selected').text());
+    });
+    </script>
+    <?php
+} );
 
 CRS_Setup::init();

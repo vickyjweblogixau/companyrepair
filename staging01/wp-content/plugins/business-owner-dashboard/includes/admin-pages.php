@@ -212,12 +212,81 @@ function bod_render_owner_detail($owner_id) {
     if (!$owner) { echo '<div class="wrap"><p>Owner not found.</p></div>'; return; }
     $listings = bod_get_listings_by_owner($owner_id);
     $payments = bod_get_owner_payments($owner_id);
+
+    // New Plan + Subscription system data
+    $sub_post = class_exists('CRS_Subscriptions') ? CRS_Subscriptions::get_subscription($owner_id) : null;
+    $orders   = class_exists('CRS_Subscriptions') ? CRS_Subscriptions::get_orders($owner_id) : [];
     ?>
     <div class="wrap">
         <h1>Business Owner: <?php echo esc_html($owner->owner_name); ?></h1>
         <a href="<?php echo admin_url('admin.php?page=business-owners'); ?>" class="button" style="margin-bottom:16px;">← Back to All Owners</a>
+
+        <!-- Subscription & Plan (new system) -->
+        <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;margin-bottom:24px;">
+            <h2 style="margin-top:0;">Subscription &amp; Renewal</h2>
+            <?php if (!$sub_post) : ?>
+                <p style="color:#dc2626;">No subscription found for this owner (no crs_sub post linked).</p>
+            <?php else :
+                $status        = $sub_post->post_status;
+                $status_labels = ['sub_active' => 'Active', 'sub_past_due' => 'Past Due', 'sub_suspended' => 'Suspended', 'sub_cancelled' => 'Cancelled'];
+                $status_colors = ['sub_active' => '#16a34a', 'sub_past_due' => '#d97706', 'sub_suspended' => '#dc2626', 'sub_cancelled' => '#6b7280'];
+                $plan_id       = get_post_meta($sub_post->ID, '_sub_plan_id', true);
+                $plan_name     = $plan_id ? get_the_title($plan_id) : '-';
+                $charge        = get_post_meta($sub_post->ID, '_sub_charge_amount', true);
+                $renewal_date  = get_post_meta($sub_post->ID, '_sub_renewal_date', true);
+                $stripe_cust   = get_post_meta($sub_post->ID, '_sub_stripe_cust', true);
+                $grace_until   = get_post_meta($sub_post->ID, '_sub_grace_until', true);
+            ?>
+            <table class="widefat" style="border:none;">
+                <tr><td style="width:200px;"><strong>Status</strong></td><td><span style="color:<?php echo esc_attr($status_colors[$status] ?? '#333'); ?>;font-weight:700;"><?php echo esc_html($status_labels[$status] ?? $status); ?></span></td></tr>
+                <tr><td><strong>Plan</strong></td><td><?php echo esc_html($plan_name); ?></td></tr>
+                <tr><td><strong>Charge Amount</strong></td><td>$<?php echo number_format((float) $charge, 2); ?> AUD</td></tr>
+                <tr><td><strong>Next Renewal Date</strong></td><td><?php echo $renewal_date ? esc_html(date('M j, Y', strtotime($renewal_date))) : '-'; ?></td></tr>
+                <?php if ($grace_until) : ?>
+                <tr><td><strong>Grace Until</strong></td><td style="color:#d97706;"><?php echo esc_html(date('M j, Y', strtotime($grace_until))); ?></td></tr>
+                <?php endif; ?>
+                <tr><td><strong>Stripe Customer</strong></td><td>
+                    <code style="font-size:12px;"><?php echo esc_html($stripe_cust ?: '-'); ?></code>
+                    <?php if ($stripe_cust) : ?>
+                        <a href="https://dashboard.stripe.com/customers/<?php echo esc_attr($stripe_cust); ?>" target="_blank" style="margin-left:8px;">View in Stripe ↗</a>
+                    <?php endif; ?>
+                </td></tr>
+                <tr><td><strong>Subscription Post</strong></td><td>
+                    <a href="<?php echo admin_url('post.php?post=' . $sub_post->ID . '&action=edit'); ?>"><?php echo esc_html($sub_post->post_title); ?> →</a>
+                </td></tr>
+            </table>
+            <?php endif; ?>
+
+            <h3 style="margin-top:24px;">Order / Renewal History</h3>
+            <?php if (empty($orders)) : ?>
+                <p style="color:#666;">No orders yet.</p>
+            <?php else : ?>
+            <table class="widefat striped">
+                <thead>
+                    <tr><th>Invoice</th><th>Type</th><th>Amount</th><th>Stripe PI</th><th>Date</th></tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($orders as $order) :
+                        $inv_num = get_post_meta($order->ID, '_order_invoice_num', true);
+                        $type    = get_post_meta($order->ID, '_order_type', true);
+                        $amount  = get_post_meta($order->ID, '_order_amount', true);
+                        $pi      = get_post_meta($order->ID, '_order_stripe_pi', true);
+                    ?>
+                    <tr>
+                        <td><a href="<?php echo admin_url('post.php?post=' . $order->ID . '&action=edit'); ?>"><?php echo esc_html($inv_num ?: $order->post_title); ?></a></td>
+                        <td><?php echo esc_html(ucfirst($type)); ?></td>
+                        <td>$<?php echo number_format((float) $amount, 2); ?></td>
+                        <td><code style="font-size:11px;"><?php echo esc_html($pi ?: '-'); ?></code></td>
+                        <td><?php echo esc_html(get_the_date('M j, Y', $order->ID)); ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+            <?php endif; ?>
+        </div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;">
-            <!-- Owner Info -->
+           <!-- Owner Info -->
             <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;">
                 <h2 style="margin-top:0;">Owner Details</h2>
                 <table class="widefat" style="border:none;">
@@ -272,7 +341,7 @@ function bod_render_owner_detail($owner_id) {
             </div>
         </div>
         <!-- Subscription Management -->
-        <h2 style="margin-top:24px;">Subscription</h2>
+        <!---<h2 style="margin-top:24px;">Subscription</h2>
         <div style="background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:20px;margin-bottom:24px;">
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:20px;">
                 <div>
@@ -304,8 +373,6 @@ function bod_render_owner_detail($owner_id) {
                     <div><?php echo $owner->sub_grace_until ? esc_html(date('M j, Y', strtotime($owner->sub_grace_until))) : '—'; ?></div>
                 </div>
             </div>
-
-            <!-- Edit form -->
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" style="border-top:1px solid #f0f0f0;padding-top:16px;">
                 <?php wp_nonce_field('bod_update_subscription_' . $owner->id); ?>
                 <input type="hidden" name="action" value="bod_update_subscription">
@@ -337,7 +404,7 @@ function bod_render_owner_detail($owner_id) {
                     <button type="submit" class="button button-primary">Save Subscription</button>
                 </div>
             </form>
-        </div>
+        </div> ---->
 
         <!-- Listings -->
         <h2>Listings (<?php echo count($listings); ?>)</h2>
@@ -376,6 +443,7 @@ function bod_render_owner_detail($owner_id) {
             </tbody>
         </table>
         <!-- Payment History -->
+        <!--
         <h2 style="margin-top:24px;">Payment History (<?php echo count($payments); ?>)</h2>
         <table class="wp-list-table widefat fixed striped">
             <thead><tr><th>ID</th><th>Type</th><th>Amount</th><th>Status</th><th>Reference</th><th>Date</th></tr></thead>
@@ -396,6 +464,7 @@ function bod_render_owner_detail($owner_id) {
             <?php endif; ?>
             </tbody>
         </table>
+        --->
         <!-- Admin Notes -->
         <h2 style="margin-top:24px;">Admin Notes</h2>
         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
@@ -443,3 +512,79 @@ function bod_handle_save_admin_notes() {
     wp_safe_redirect(admin_url('admin.php?page=business-owners&action=view&id=' . $owner_id . '&saved=1'));
     exit;
 }
+// ============================================
+// PENDING CHANGES — admin review screen
+// ============================================
+function bod_render_pending_changes_admin() {
+    $changes = crs_get_pending_changes('pending');
+    ?>
+    <div class="wrap">
+        <h1>Pending Changes (<?php echo count($changes); ?>)</h1>
+        <table class="widefat striped">
+            <thead><tr><th>Business</th><th>Type</th><th>Field</th><th>Old</th><th>New</th><th>Submitted</th><th>Actions</th></tr></thead>
+            <tbody>
+            <?php if (empty($changes)) : ?>
+                <tr><td colspan="7">No pending changes.</td></tr>
+            <?php else : foreach ($changes as $c) : ?>
+                <tr>
+                    <td><a href="<?php echo get_edit_post_link($c->business_id); ?>"><?php echo esc_html(get_the_title($c->business_id)); ?></a></td>
+                    <td><?php echo $c->change_type === 'image' ? '<i class="bi bi-image"></i> Image' : 'Field'; ?></td>
+                    <td><?php echo esc_html($c->field_key); ?></td>
+                    <td>
+                        <?php if ($c->change_type === 'image' && $c->old_value) : ?>
+                            <img src="<?php echo esc_url(wp_get_attachment_url($c->old_value)); ?>" style="height:50px;border-radius:4px;">
+                        <?php else : ?>
+                            <span style="color:#888;"><?php echo esc_html(wp_trim_words($c->old_value, 10)); ?></span>
+                        <?php endif; ?>
+                    </td>
+                    <td>
+                        <?php if ($c->change_type === 'image') : ?>
+                            <img src="<?php echo esc_url($c->image_url); ?>" style="height:50px;border-radius:4px;">
+                        <?php else : ?>
+                            <strong style="color:#16a34a;"><?php echo esc_html(wp_trim_words($c->new_value, 10)); ?></strong>
+                        <?php endif; ?>
+                    </td>
+                    <td><?php echo esc_html(date('M j, g:ia', strtotime($c->submitted_at))); ?></td>
+                    <td>
+                        <a href="<?php echo admin_url('admin-post.php?action=bod_review_change&id=' . $c->id . '&decision=approve&_wpnonce=' . wp_create_nonce('bod_review_' . $c->id)); ?>" class="button button-primary button-small">Approve</a>
+                        <a href="<?php echo admin_url('admin-post.php?action=bod_review_change&id=' . $c->id . '&decision=reject&_wpnonce=' . wp_create_nonce('bod_review_' . $c->id)); ?>" class="button button-small">Reject</a>
+                    </td>
+                </tr>
+            <?php endforeach; endif; ?>
+            </tbody>
+        </table>
+    </div>
+    <?php
+}
+
+add_action('admin_post_bod_review_change', function() {
+    global $wpdb;
+    $id = (int) $_GET['id'];
+    if (!wp_verify_nonce($_GET['_wpnonce'] ?? '', 'bod_review_' . $id)) wp_die('Invalid request');
+
+    $table  = $wpdb->prefix . 'crs_pending_changes';
+    $change = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table} WHERE id = %d", $id));
+    if (!$change) wp_die('Not found');
+
+    $decision = sanitize_key($_GET['decision']);
+
+    if ($decision === 'approve') {
+        update_post_meta($change->business_id, '_' . $change->field_key, $change->new_value);
+        if (function_exists('bod_add_notification')) {
+            bod_add_notification($change->owner_id, 'profile', 'Change Approved', ucfirst($change->field_key) . ' update is now live.');
+        }
+    } else {
+        if (function_exists('bod_add_notification')) {
+            bod_add_notification($change->owner_id, 'profile', 'Change Rejected', ucfirst($change->field_key) . ' update was not approved.');
+        }
+    }
+
+    $wpdb->update($table, [
+        'status'      => $decision === 'approve' ? 'approved' : 'rejected',
+        'reviewed_at' => current_time('mysql'),
+        'reviewed_by' => get_current_user_id(),
+    ], ['id' => $id]);
+
+    wp_redirect(admin_url('admin.php?page=bod-pending-changes'));
+    exit;
+});

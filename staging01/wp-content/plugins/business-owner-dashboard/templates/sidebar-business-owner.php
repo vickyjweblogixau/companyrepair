@@ -1,8 +1,4 @@
 <?php
-/**
- * Business Owner Dashboard — Sidebar / Shell
- * Mirrors private-seller-dashboard design with CRS orange theme
- */
 defined('ABSPATH') || exit;
 
 if (!is_user_logged_in()) {
@@ -12,129 +8,87 @@ if (!is_user_logged_in()) {
 
 $current_user = wp_get_current_user();
 $owner        = bod_get_current_owner();
-
-$owner_name    = $owner ? $owner->owner_name  : $current_user->display_name;
-$business_name = $owner ? ($owner->business_name ?: $owner_name) : $owner_name;
-$current_view  = sanitize_key($_GET['view'] ?? 'dashboard');
-$page_title    = $page_title ?? 'Dashboard';
+$owner_name   = $owner ? $owner->owner_name : $current_user->display_name;
+$business_name= $owner ? ($owner->business_name ?: $owner_name) : $owner_name;
+$initials     = strtoupper(substr($business_name, 0, 1) . (strpos($business_name, ' ') ? substr(strstr($business_name, ' '), 1, 1) : ''));
+$current_view = sanitize_key($_GET['view'] ?? 'dashboard');
+$page_title   = $page_title ?? 'Dashboard';
 
 $nav_items = [
-    'dashboard'    => ['icon' => 'ti ti-layout-dashboard', 'label' => 'Dashboard',   'url' => '?view=dashboard'],
-    'listings'     => ['icon' => 'ti ti-list',             'label' => 'My Listings',  'url' => '?view=listings'],
-    'add-listing'  => ['icon' => 'ti ti-plus',             'label' => 'Add Listing',  'url' => '?view=add-listing'],
-    'enquiries'    => ['icon' => 'ti ti-mail',             'label' => 'Enquiries',    'url' => '?view=enquiries'],
-    'invoices'     => ['icon' => 'ti ti-file-invoice',     'label' => 'Invoices',     'url' => '?view=invoices'],
-    'profile'      => ['icon' => 'ti ti-user',             'label' => 'Profile',      'url' => '?view=profile'],
-    'subscription' => ['icon' => 'ti ti-credit-card',      'label' => 'Billing',      'url' => '?view=subscription'],
+    'dashboard'    => ['icon' => 'bi-grid-1x2-fill',     'label' => 'Dashboard'],
+    'profile'      => ['icon' => 'bi-person-badge',      'label' => 'Business Profile'],
+    'listings'     => ['icon' => 'bi-card-checklist',    'label' => 'My Listings'],
+    'add-listing'  => ['icon' => 'bi-plus-circle',       'label' => 'Add Listing'],
+    'enquiries'    => ['icon' => 'bi-chat-left-text',    'label' => 'Enquiries'],
+    'invoices'     => ['icon' => 'bi-file-earmark-text', 'label' => 'Invoices'],
+    'subscription' => ['icon' => 'bi-credit-card',       'label' => 'Billing & Plans'],
 ];
+
+// Live count for enquiries nav badge
+$enquiry_count = 0;
+if ($owner) {
+    $all_enq = bod_get_owner_enquiries($owner->id);
+    $enquiry_count = count(array_filter($all_enq, fn($e) => $e->status === 'new'));
+}
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo esc_html($page_title); ?> — <?php echo get_bloginfo('name'); ?></title>
-    <link rel="stylesheet" href="<?php echo BOD_PLUGIN_URL; ?>assets/css/style.css">
-    <link rel="stylesheet" href="<?php echo BOD_PLUGIN_URL; ?>assets/css/new-dashboard.css">
-    <link rel="stylesheet" href="<?php echo BOD_PLUGIN_URL; ?>assets/css/responsive.css">
-    <link rel="stylesheet" href="<?php echo BOD_PLUGIN_URL; ?>assets/css/crs-theme.css">
-    <?php wp_head(); ?>
-    <style>
-        #wpadminbar { display: none !important; }
-        html { margin-top: 0 !important; }
-    </style>
-</head>
-<body class="ltr light">
+<div class="tfx-main-wrapper" id="tfxMainWrapper">
+<div class="tfx-screen-overlay" id="tfxScreenOverlay"></div>
 
-<div id="app-layout" class="app-layout">
-
-    <!-- ===== SIDEBAR ===== -->
-    <nav id="sidebar" class="sidebar">
-        <div class="sidebar-header">
-            <a href="<?php echo home_url('/'); ?>" class="sidebar-brand">
-                <?php
-                $logo = get_option('site_logo');
-                if ($logo) : ?>
-                    <img src="<?php echo esc_url(wp_get_attachment_url($logo)); ?>" alt="<?php echo get_bloginfo('name'); ?>" style="max-height:40px;">
-                <?php else : ?>
-                    <span class="sidebar-brand-text"><?php echo get_bloginfo('name'); ?></span>
-                <?php endif; ?>
-            </a>
-            <button class="sidebar-toggle" id="sidebar-toggle" aria-label="Toggle sidebar">
-                <i class="ti ti-menu-2"></i>
-            </button>
-        </div>
-
-        <!-- User Info -->
-        <div class="sidebar-user">
-            <div class="sidebar-user-avatar">
-                <?php echo strtoupper(substr($owner_name, 0, 1)); ?>
-            </div>
-            <div class="sidebar-user-info">
-                <div class="sidebar-user-name"><?php echo esc_html($owner_name); ?></div>
-                <?php if ($business_name && $business_name !== $owner_name) : ?>
-                    <div class="sidebar-user-role"><?php echo esc_html($business_name); ?></div>
-                <?php else : ?>
-                    <div class="sidebar-user-role">Business Owner</div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Navigation -->
-        <ul class="main-nav">
-            <?php foreach ($nav_items as $view => $item) :
-                $is_active = ($current_view === $view);
-            ?>
-            <li class="<?php echo $is_active ? 'active' : ''; ?>">
-                <a href="<?php echo esc_url($item['url']); ?>">
-                    <i class="<?php echo esc_attr($item['icon']); ?>"></i>
-                    <span><?php echo esc_html($item['label']); ?></span>
-                </a>
-            </li>
-            <?php endforeach; ?>
-        </ul>
-
-        <!-- Quick Listing Credit Counter -->
-        <?php if ($owner) : ?>
-        <div class="sidebar-credits" style="margin:16px 12px;padding:12px;background:rgba(249,115,22,0.1);border-radius:8px;border:1px solid rgba(249,115,22,0.2);">
-            <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#666;margin-bottom:4px;">Listing Credits</div>
-            <div style="font-size:24px;font-weight:700;color:#0a2647;"><?php echo (int) $owner->available_listing_credits; ?></div>
-            <div style="font-size:12px;color:#888;">available</div>
-            <?php if ($owner->available_listing_credits === 0 || $owner->available_listing_credits === '0') : ?>
-                <a href="?view=subscription" style="display:block;margin-top:8px;padding:6px;background:#0a2647;color:#fff;border-radius:4px;text-align:center;font-size:12px;font-weight:600;text-decoration:none;">Buy Listing</a>
+<aside class="tfx-sidebar-panel" id="tfxSidebarPanel">
+    <div class="tfx-logo-area">
+        <div class="tfx-logo-wrap">
+            <?php $logo = get_option('site_logo'); if ($logo) : ?>
+                <img src="<?php echo esc_url(wp_get_attachment_url($logo)); ?>" class="tfx-logo" alt="<?php bloginfo('name'); ?>">
+            <?php else : ?>
+                <div class="tfx-logo-fallback">
+                    <i class="fa-solid fa-screwdriver-wrench"></i>
+                    <span><?php echo esc_html(get_bloginfo('name')); ?></span>
+                </div>
             <?php endif; ?>
         </div>
-        <?php endif; ?>
+        <button class="tfx-sidebar-close-btn" id="tfxSidebarCloseBtn" type="button"><i class="bi bi-x-lg"></i></button>
+    </div>
 
-        <!-- Sidebar Footer -->
-        <div class="sidebar-footer">
-            <a href="<?php echo wp_logout_url(home_url('/')); ?>" class="sidebar-logout">
-                <i class="ti ti-logout"></i>
-                <span>Logout</span>
-            </a>
-        </div>
+    <nav class="tfx-navigation-area">
+        <?php foreach ($nav_items as $view => $item) :
+            $active = ($current_view === $view) ? ' tfx-navigation-active' : '';
+        ?>
+        <a href="?view=<?php echo esc_attr($view); ?>" class="tfx-navigation-link<?php echo $active; ?>">
+            <i class="bi <?php echo esc_attr($item['icon']); ?>"></i>
+            <?php echo esc_html($item['label']); ?>
+            <?php if ($view === 'enquiries' && $enquiry_count > 0) : ?>
+                <span class="tfx-alert-count"><?php echo (int) $enquiry_count; ?></span>
+            <?php endif; ?>
+        </a>
+        <?php endforeach; ?>
     </nav>
+</aside>
 
-    <!-- ===== MAIN CONTENT ===== -->
-    <div class="main-content" id="main-content">
-
-        <!-- Top Bar -->
-        <div class="topbar">
-            <button class="topbar-toggle" id="topbar-toggle">
-                <i class="ti ti-menu-2"></i>
-            </button>
-            <div class="topbar-title"><?php echo esc_html($page_title); ?></div>
-            <div class="topbar-actions">
-                <?php if ($owner && $owner->available_listing_credits > 0) : ?>
-                    <a href="?view=add-listing" class="btn btn-primary btn-sm">
-                        <i class="ti ti-plus"></i> Add Listing
-                    </a>
-                <?php endif; ?>
-                <div class="topbar-user-menu">
-                    <span class="topbar-avatar"><?php echo strtoupper(substr($owner_name, 0, 1)); ?></span>
+<main class="tfx-content-board">
+    <header class="tfx-top-navbar">
+        <div class="tfx-navbar-left">
+            <button class="tfx-sidebar-toggle-btn" id="tfxSidebarToggleBtn"><i class="bi bi-list"></i></button>
+            <div>
+                <div class="tfx-welcome-label">Welcome back,</div>
+                <h2 class="tfx-business-name"><?php echo esc_html($business_name); ?></h2>
+            </div>
+        </div>
+        <div class="tfx-navbar-actions">
+            <div class="tfx-user-dropdown-wrapper">
+                <button class="tfx-user-profile-box" id="tfxUserDropdownBtn" type="button">
+                    <div class="tfx-user-avatar"><?php echo esc_html($initials); ?></div>
+                    <div class="tfx-user-text-box">
+                        <p class="tfx-user-title"><?php echo esc_html($business_name); ?></p>
+                        <span class="tfx-user-role">Business Account</span>
+                    </div>
+                    <i class="bi bi-chevron-down small"></i>
+                </button>
+                <div class="tfx-user-dropdown-menu" id="tfxUserDropdownMenu">
+                    <a href="?view=profile"><i class="bi bi-person"></i> View Profile</a>
+                    <a href="<?php echo wp_logout_url(home_url('/')); ?>"><i class="bi bi-box-arrow-right"></i> Logout</a>
                 </div>
             </div>
         </div>
+    </header>
 
-        <!-- Page Content -->
-        <div class="page-content">
+    <section class="tfx-dashboard-content">

@@ -15,23 +15,43 @@ if (!defined('ABSPATH')) exit;
 // Falls back to BOD_LISTING_AMOUNT_DISPLAY if no plan found
 // ============================================
 function bod_get_active_signup_plan() {
-    // Try to get the active plan from crs_sub_plan CPT
-    $plans = get_posts( [
-        'post_type'      => 'crs_sub_plan',
-        'post_status'    => 'publish',
-        'posts_per_page' => 1,
-        'orderby'        => 'date',
-        'order'          => 'ASC',
-        'meta_query'     => [
-            [
-                'key'   => '_plan_status',
-                'value' => 'active',
+    // Use the explicitly-designated default signup plan (checkbox on the
+    // plan edit screen) instead of "oldest active plan" — so price changes
+    // and new plans don't silently get ignored.
+    $default_plan_id = (int) get_option( 'bod_default_signup_plan_id' );
+    $plans            = [];
+
+    if ( $default_plan_id ) {
+        $plan_post = get_post( $default_plan_id );
+        if ( $plan_post
+            && $plan_post->post_type === 'crs_sub_plan'
+            && $plan_post->post_status === 'publish'
+            && get_post_meta( $plan_post->ID, '_plan_status', true ) === 'active'
+        ) {
+            $plans = [ $plan_post ];
+        }
+    }
+
+    // Fallback: no default designated (or it's been deactivated) — use the
+    // most recently updated active plan, not the oldest one.
+    if ( empty( $plans ) ) {
+        $plans = get_posts( [
+            'post_type'      => 'crs_sub_plan',
+            'post_status'    => 'publish',
+            'posts_per_page' => 1,
+            'orderby'        => 'modified',
+            'order'          => 'DESC',
+            'meta_query'     => [
+                [
+                    'key'   => '_plan_status',
+                    'value' => 'active',
+                ],
             ],
-        ],
-    ] );
+        ] );
+    }
 
     if ( empty( $plans ) ) {
-        // Fallback to options if no CPT plan found
+        // No plan found anywhere — fallback to options
         return [
             'id'          => 0,
             'name'        => get_option( 'bod_plan_name', 'Simple Subscription' ),
@@ -81,7 +101,6 @@ function bod_get_active_signup_plan() {
         'duration' => $duration,
     ];
 }
-
 // Dynamic data for signup form fields
 function bod_get_service_radius_options() {
     return [

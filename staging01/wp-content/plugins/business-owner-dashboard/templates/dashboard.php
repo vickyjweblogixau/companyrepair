@@ -74,12 +74,11 @@ switch ($current_view) {
         include BOD_PLUGIN_DIR . 'templates/dashboard-home.php';
         break;
 }
+
 ?>
         </div><!-- .page-content -->
     </div><!-- .main-content -->
 </div><!-- #app-layout -->
-
-<?php wp_footer(); ?>
 
 <script>
 // Sidebar toggle for mobile
@@ -99,5 +98,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-</body>
-</html>

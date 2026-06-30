@@ -16,9 +16,37 @@ $sub_start_date   = $owner->sub_start_date   ?? '';
 $days_left        = ($sub_renewal_date && class_exists('CRS_Subscriptions'))
                     ? CRS_Subscriptions::days_until_renewal($owner)
                     : null;
+if (!empty($_GET['cancel_boost'])) {
+    $boost_key = sanitize_title($_GET['cancel_boost']);
+    if (wp_verify_nonce($_GET['_wpnonce'] ?? '', 'cancel_boost_' . $business_id . '_' . $boost_key)) {
+        bod_cancel_boost_renewal($business_id, $boost_key);
+        wp_redirect('?view=subscription&boost_cancelled=1');
+        exit;
+    }
+}                    
 ?>
 
 <div class="bod-subscription-page">
+    <!-- Payment Method -->
+    <div class="card billing-payment-card" style="border-radius:12px;margin-bottom:24px;">
+        <div class="card-body" style="padding:24px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+                <div>
+                    <h5 style="font-weight:700;margin:0 0 6px;">
+                        <i class="bi bi-credit-card" style="color:#1565d8;"></i> Payment Method
+                    </h5>
+                    <p style="color:#888;margin:0;font-size:13px;">
+                        Your saved card is charged automatically for renewals and add-ons.
+                    </p>
+                </div>
+                <a href="<?php echo esc_url(bod_create_billing_portal_session($owner->id)); ?>"
+                class="btn btn-outline-primary" target="_blank" rel="noopener">
+                    <i class="bi bi-credit-card"></i> Update Payment Method
+                </a>
+            </div>
+        </div>
+    </div>
+
     <div style="margin-bottom:24px;">
         <h4 style="margin:0;font-weight:700;">Billing &amp; Subscription</h4>
     </div>
@@ -134,29 +162,57 @@ $days_left        = ($sub_renewal_date && class_exists('CRS_Subscriptions'))
     <!-- Boost Options -->
     <div class="card" style="border-radius:12px;margin-bottom:24px;">
         <div class="card-body" style="padding:24px;">
-            <h5 style="font-weight:700;margin:0 0 8px;">Listing Boosts</h5>
-            <p style="color:#888;font-size:13px;margin:0 0 16px;">One-time boost options to increase your listing visibility.</p>
+            <?php
+            $business_id  = bod_get_owner_business_id($owner->id);
+            $addon_plans  = bod_get_active_addon_plans();      // dynamic — from crs_sub_plan CPT
+            $active_boosts = bod_get_active_boosts($business_id); // multiple allowed
+            ?>
+
+            <h4>Listing Boosts</h4>
+            <p>One-time boost options to increase your listing visibility.</p>
+
             <div class="row g-3">
-                <?php
-                $boosts = [
-                    ['Featured',  defined('BOD_BOOST_FEATURED_DISPLAY')  ? BOD_BOOST_FEATURED_DISPLAY  : 0, 'featured',  '#0a2647', 'Appear in featured listings section'],
-                    ['Exclusive', defined('BOD_BOOST_EXCLUSIVE_DISPLAY') ? BOD_BOOST_EXCLUSIVE_DISPLAY : 0, 'exclusive', '#7c3aed', 'Exclusive spotlight for your listing'],
-                    ['Homepage',  defined('BOD_BOOST_HOMEPAGE_DISPLAY')  ? BOD_BOOST_HOMEPAGE_DISPLAY  : 0, 'homepage',  '#2563eb', 'Featured on the homepage banner'],
-                ];
-                foreach ($boosts as [$label, $price, $type, $color, $desc]) :
-                ?>
+            <?php if (empty($addon_plans)) : ?>
+                <p class="text-muted">No add-ons currently available.</p>
+            <?php endif; ?>
+
+            <?php foreach ($addon_plans as $plan) :
+                $plan_key   = sanitize_title($plan->post_title); // 'featured', 'exclusive', 'homepage' etc — derived from plan title
+                $charge     = get_post_meta($plan->ID, '_plan_charge_amount', true);
+                $duration   = get_post_meta($plan->ID, '_plan_duration', true) ?: 30;
+                $features   = get_post_meta($plan->ID, '_plan_features', true);
+                $is_active  = isset($active_boosts[$plan_key]);
+            ?>
                 <div class="col-md-4">
-                    <div style="border:2px solid <?php echo $color; ?>22;border-radius:12px;padding:20px;text-align:center;">
-                        <div style="font-size:22px;font-weight:700;color:<?php echo $color; ?>"><?php echo esc_html($label); ?></div>
-                        <div style="font-size:28px;font-weight:700;margin:8px 0;">$<?php echo number_format($price, 2); ?></div>
-                        <div style="font-size:12px;color:#888;margin-bottom:16px;"><?php echo esc_html($desc); ?></div>
-                        <button class="btn btn-sm bod-buy-boost-btn" data-boost="<?php echo $type; ?>"
-                                style="border-color:<?php echo $color; ?>;color:<?php echo $color; ?>;width:100%;">
-                            Buy <?php echo esc_html($label); ?> Boost
-                        </button>
+                    <div class="boost-card <?php echo $is_active ? 'boost-active' : ''; ?>">
+                        <h5><?php echo esc_html($plan->post_title); ?></h5>
+                        <div class="boost-price">$<?php echo number_format((float) $charge, 2); ?></div>
+                        <?php if ($features) : ?><p><?php echo esc_html(wp_trim_words($features, 8)); ?></p><?php endif; ?>
+
+                        <?php if ($is_active) :
+                            $boost_data = $active_boosts[$plan_key];
+                        ?>
+                            <div class="boost-active-badge">
+                                Active until <?php echo esc_html(date('M j, Y', strtotime($boost_data['expires']))); ?>
+                            </div>
+                            <?php if ($boost_data['auto_renew']) : ?>
+                                <a href="?view=subscription&cancel_boost=<?php echo esc_attr($plan_key); ?>&_wpnonce=<?php echo wp_create_nonce('cancel_boost_' . $business_id . '_' . $plan_key); ?>"
+                                class="btn btn-outline-danger btn-sm w-100">
+                                    Cancel Renewal
+                                </a>
+                                <small class="text-muted d-block mt-1">Active until expiry, then won't auto-renew.</small>
+                            <?php else : ?>
+                                <span class="text-muted small">Cancelled — won't auto-renew after expiry.</span>
+                            <?php endif; ?>
+                        <?php else : ?>
+                            <a href="<?php echo esc_url(home_url('/wp-json/business-owners-addons/v1/checkout?plan_id=' . $plan->ID)); ?>"
+                            class="btn btn-primary w-100">
+                                Buy <?php echo esc_html($plan->post_title); ?> Boost
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
-                <?php endforeach; ?>
+            <?php endforeach; ?>
             </div>
         </div>
     </div>

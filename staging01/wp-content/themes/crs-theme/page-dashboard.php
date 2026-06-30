@@ -24,6 +24,8 @@ if ( ! in_array( 'business_owner', (array) $user->roles, true ) ) {
 }
 
 //get_header();
+include BOD_PLUGIN_DIR . 'templates/header-business-owner.php';
+
 ?>
 
 <main class="container px-3 py-4" style="max-width:1140px;">
@@ -38,8 +40,12 @@ if ( ! in_array( 'business_owner', (array) $user->roles, true ) ) {
       <?php esc_html_e( 'Please ensure the CRS Business Dashboard plugin is installed and activated.', 'crs' ); ?>
     </div>
   <?php endif;  */ ?>
-    <?php echo do_shortcode( '[business_owner_dashboard]' ); ?>
+    <?php echo do_shortcode( '[business_owner_dashboard]' ); 
+    ?>
 
 </main>
 
-<?php //get_footer(); ?>
+<?php
+include BOD_PLUGIN_DIR . 'templates/footer-business-owner.php';
+
+ //get_footer(); ?>

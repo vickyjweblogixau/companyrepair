@@ -94,7 +94,7 @@ function bod_create_signup_checkout($owner_data) {
         $amount_display = 0;
         $plan_name      = 'Business Listing — Monthly Subscription';
 
-        $plans = get_posts( [
+        /* $plans = get_posts( [
             'post_type'      => 'crs_sub_plan',
             'post_status'    => 'publish',
             'posts_per_page' => 1,
@@ -106,6 +106,31 @@ function bod_create_signup_checkout($owner_data) {
         if ( ! empty( $plans ) ) {
             $amount_display = (float) get_post_meta( $plans[0]->ID, '_plan_charge_amount', true );
             $plan_name      = $plans[0]->post_title;
+        } */
+        // Fetch the explicitly-designated default signup plan (set via checkbox
+        // on the plan edit screen) instead of "oldest active plan" — this stays
+        // correct no matter how many plans get added later.
+        $default_plan_id = (int) get_option( 'bod_default_signup_plan_id' );
+        $plan_post        = $default_plan_id ? get_post( $default_plan_id ) : null;
+
+        if ( $plan_post && $plan_post->post_status === 'publish' && get_post_meta( $plan_post->ID, '_plan_status', true ) === 'active' ) {
+            $amount_display = (float) get_post_meta( $plan_post->ID, '_plan_charge_amount', true );
+            $plan_name      = $plan_post->post_title;
+        } else {
+            // Fallback: no default designated (or it got deactivated) — use
+            // the most recently updated active plan rather than the oldest.
+            $plans = get_posts( [
+                'post_type'      => 'crs_sub_plan',
+                'post_status'    => 'publish',
+                'posts_per_page' => 1,
+                'orderby'        => 'modified',
+                'order'          => 'DESC',
+                'meta_query'     => [ [ 'key' => '_plan_status', 'value' => 'active' ] ],
+            ] );
+            if ( ! empty( $plans ) ) {
+                $amount_display = (float) get_post_meta( $plans[0]->ID, '_plan_charge_amount', true );
+                $plan_name      = $plans[0]->post_title;
+            }
         }
 
         if ( ! $amount_display ) {
@@ -443,6 +468,18 @@ function bod_webhook_process_signup($session) {
             'monthly',
             $stripe_pi,
             $session->id
+        );
+         // succeeded now that the new CPT-based order exists.
+        $wpdb->update(
+            BOD_TABLE_PAYMENTS,
+            [
+                'status'       => 'succeeded',
+                'completed_at' => current_time('mysql'),
+            ],
+            [
+                'stripe_checkout_session_id' => $session->id,
+                'payment_type'               => 'signup',
+            ]
         );
     } else {
         // Fallback: manual insert if class not loaded

@@ -237,6 +237,9 @@ class CRS_Migrations {
         if ( ! wp_next_scheduled( 'crs_daily_grace_check' ) ) {
             wp_schedule_event( strtotime( 'today 09:00:00' ), 'daily', 'crs_daily_grace_check' );
         }
+        if ( ! wp_next_scheduled( 'crs_daily_boost_renewal_check' ) ) {
+            wp_schedule_event( strtotime( 'today 08:30:00' ), 'daily', 'crs_daily_boost_renewal_check' );
+        }
         if ( ! wp_next_scheduled( 'crs_cleanup_enquiry_images' ) ) {
             wp_schedule_event( time(), 'daily', 'crs_cleanup_enquiry_images' );
         }
@@ -299,5 +302,32 @@ class CRS_Migrations {
         update_option( 'bod_simple_plan_seeded_v1', true );
         error_log( '[CRS Migration] Simple Subscription plan created. ID: ' . $post_id . ' | Charge: $' . $charge );
     }
+    public static function create_pending_changes_table() {
+        global $wpdb;
+        $table   = $wpdb->prefix . 'crs_pending_changes';
+        $charset = $wpdb->get_charset_collate();
 
+        $sql = "CREATE TABLE IF NOT EXISTS {$table} (
+            id              BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+            business_id     BIGINT(20) UNSIGNED NOT NULL,
+            owner_id        BIGINT(20) UNSIGNED NOT NULL,
+            change_type     VARCHAR(20)  NOT NULL DEFAULT 'field',   -- 'field' or 'image'
+            field_key       VARCHAR(100) DEFAULT NULL,                -- e.g. 'business_name', null for images
+            old_value       LONGTEXT     DEFAULT NULL,
+            new_value       LONGTEXT     DEFAULT NULL,                -- text value, OR attachment ID for images
+            image_url       VARCHAR(500) DEFAULT NULL,                -- preview URL if change_type='image'
+            status          VARCHAR(20)  NOT NULL DEFAULT 'pending',  -- pending / approved / rejected
+            admin_note      TEXT         DEFAULT NULL,
+            submitted_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            reviewed_at     DATETIME     DEFAULT NULL,
+            reviewed_by     BIGINT(20)   DEFAULT NULL,
+            PRIMARY KEY (id),
+            KEY business_id (business_id),
+            KEY owner_id (owner_id),
+            KEY status (status)
+        ) {$charset};";
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+        dbDelta($sql);
+    }
 }

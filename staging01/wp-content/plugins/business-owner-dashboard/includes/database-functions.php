@@ -286,3 +286,244 @@ function bod_get_unread_notifications($owner_id) {
         $owner_id
     ));
 }
+function bod_get_profile_view_series($owner_id, $days) {
+    $labels = $values = [];
+    for ($i = $days - 1; $i >= 0; $i--) {
+        $date = date('d M', strtotime("-{$i} days"));
+        $labels[] = $date;
+        $values[] = 0; // wire to real analytics table here once you track views
+    }
+    return ['labels' => $labels, 'values' => $values];
+}
+/**
+ * Get all enquiries for businesses owned by this owner.
+ */
+function bod_get_owner_enquiries($owner_id, $limit = 100) {
+    global $wpdb;
+    $owner = bod_get_owner($owner_id);
+    if (!$owner || empty($owner->wp_user_id)) return [];
+
+    $business_ids = $wpdb->get_col($wpdb->prepare(
+        "SELECT ID FROM {$wpdb->posts} WHERE post_type = 'business' AND post_author = %d AND post_status = 'publish'",
+        $owner->wp_user_id
+    ));
+    if (empty($business_ids)) return [];
+
+    $placeholders = implode(',', array_fill(0, count($business_ids), '%d'));
+    $table = $wpdb->prefix . 'crs_enquiries';
+
+    return $wpdb->get_results($wpdb->prepare(
+        "SELECT * FROM {$table} WHERE business_id IN ({$placeholders}) ORDER BY created_at DESC LIMIT %d",
+        array_merge($business_ids, [$limit])
+    ));
+}
+
+function bod_enquiry_initials($name) {
+    $parts = preg_split('/\s+/', trim($name));
+    $initials = '';
+    foreach (array_slice($parts, 0, 2) as $p) {
+        $initials .= mb_substr($p, 0, 1);
+    }
+    return strtoupper($initials) ?: '??';
+}
+
+function bod_enquiry_avatar_class($index) {
+    $palette = ['tfx-soft-green', 'tfx-soft-purple', 'tfx-soft-orange', 'tfx-soft-blue', 'tfx-soft-pink'];
+    return $palette[$index % count($palette)];
+}
+
+function bod_enquiry_status_class($status) {
+    $map = [
+        'new'        => 'tfx-status-new',
+        'contacted'  => 'tfx-status-contacted',
+        'in_progress'=> 'tfx-status-progress',
+        'closed'     => 'tfx-status-closed',
+    ];
+    return $map[$status] ?? 'tfx-status-new';
+}
+
+function bod_enquiry_status_label($status) {
+    $map = [
+        'new'         => 'New',
+        'contacted'   => 'Contacted',
+        'in_progress' => 'In Progress',
+        'closed'      => 'Closed',
+    ];
+    return $map[$status] ?? 'New';
+}
+function crs_submit_pending_field_change($business_id, $owner_id, $field_key, $new_value) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'crs_pending_changes';
+    $old_value = get_post_meta($business_id, '_' . $field_key, true);
+
+    if ($old_value == $new_value) return false; // no actual change
+
+    $wpdb->insert($table, [
+        'business_id'  => $business_id,
+        'owner_id'     => $owner_id,
+        'change_type'  => 'field',
+        'field_key'    => $field_key,
+        'old_value'    => $old_value,
+        'new_value'    => $new_value,
+        'status'       => 'pending',
+        'submitted_at' => current_time('mysql'),
+    ]);
+    return $wpdb->insert_id;
+}
+
+function crs_submit_pending_image_change($business_id, $owner_id, $attachment_id) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'crs_pending_changes';
+    $current_logo_id = get_post_meta($business_id, '_crs_logo', true);
+
+    $wpdb->insert($table, [
+        'business_id'  => $business_id,
+        'owner_id'     => $owner_id,
+        'change_type'  => 'image',
+        'field_key'    => 'crs_logo', // or 'gallery_1' etc — pass which slot
+        'old_value'    => $current_logo_id,
+        'new_value'    => $attachment_id,
+        'image_url'    => wp_get_attachment_url($attachment_id),
+        'status'       => 'pending',
+        'submitted_at' => current_time('mysql'),
+    ]);
+
+    // Notify admin
+    wp_mail(get_option('admin_email'), 'New Image Pending Approval', 'Business #' . $business_id . ' uploaded a new image — review in admin.');
+
+    return $wpdb->insert_id;
+}
+
+function crs_get_pending_changes($status = 'pending', $business_id = null) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'crs_pending_changes';
+    $where = ['status = %s'];
+    $params = [$status];
+    if ($business_id) {
+        $where[] = 'business_id = %d';
+        $params[] = $business_id;
+    }
+    $sql = "SELECT * FROM {$table} WHERE " . implode(' AND ', $where) . " ORDER BY submitted_at DESC";
+    return $wpdb->get_results($wpdb->prepare($sql, $params));
+}
+
+function crs_has_pending_changes($business_id) {
+    global $wpdb;
+    $table = $wpdb->prefix . 'crs_pending_changes';
+    return (int) $wpdb->get_var($wpdb->prepare(
+        "SELECT COUNT(*) FROM {$table} WHERE business_id = %d AND status = 'pending'",
+        $business_id
+    ));
+}
+
+/**
+ * Active boosts stored as serialized array:
+ * [ 'featured' => ['expires' => '...', 'auto_renew' => 1], 'homepage' => [...] ]
+ */
+function bod_get_active_boosts($business_id) {
+    $boosts = get_post_meta($business_id, '_active_boosts', true);
+    if (!is_array($boosts)) return [];
+
+    $live = [];
+    foreach ($boosts as $type => $data) {
+        if (!empty($data['expires']) && strtotime($data['expires']) > time()) {
+            $live[$type] = $data;
+        }
+    }
+    return $live; // only currently-live boosts
+}
+
+function bod_is_boost_active($business_id, $boost_type) {
+    $live = bod_get_active_boosts($business_id);
+    return isset($live[$boost_type]);
+}
+
+function bod_activate_boost($business_id, $owner_id, $plan_id, $boost_key) {
+    $charge   = (float) get_post_meta($plan_id, '_plan_charge_amount', true);
+    $duration = (int) get_post_meta($plan_id, '_plan_duration', true) ?: 30;
+
+    $boosts = get_post_meta($business_id, '_active_boosts', true);
+    if (!is_array($boosts)) $boosts = [];
+
+    $boosts[$boost_key] = [
+        'plan_id'      => $plan_id,
+        'owner_id'     => $owner_id,
+        'charge'       => $charge,
+        'renewal_date' => date('Y-m-d H:i:s', strtotime("+{$duration} days")),
+        'auto_renew'   => 1,
+    ];
+    update_post_meta($business_id, '_active_boosts', $boosts);
+}
+
+function bod_cancel_boost_renewal($business_id, $boost_type) {
+    $boosts = get_post_meta($business_id, '_active_boosts', true);
+    if (!is_array($boosts) || !isset($boosts[$boost_type])) return;
+
+    $boosts[$boost_type]['auto_renew'] = 0; // stays live till expiry, just won't renew
+    update_post_meta($business_id, '_active_boosts', $boosts);
+}
+
+/**
+ * Fetch add-on plans dynamically from crs_sub_plan CPT
+ * (Plan Type = addon, Plan Status = active) — admin-controlled, no static array.
+ */
+function bod_get_active_addon_plans() {
+    return get_posts([
+        'post_type'      => 'crs_sub_plan',
+        'post_status'    => 'publish',
+        'posts_per_page' => -1,
+        'orderby'        => 'menu_order title',
+        'order'          => 'ASC',
+        'meta_query'     => [
+            'relation' => 'AND',
+            ['key' => '_plan_status', 'value' => 'active'],
+            ['key' => '_plan_type',   'value' => 'addon'],
+        ],
+    ]);
+}
+/**
+ * Resolve the 'business' CPT post linked to this owner.
+ * Falls back to querying by author/meta if no direct link exists.
+ */
+function bod_get_owner_business_id($owner_id) {
+    $owner = bod_get_owner($owner_id);
+    if (!$owner) return 0;
+
+    // If you already store a direct link, use that first
+    if (!empty($owner->business_post_id)) {
+        return (int) $owner->business_post_id;
+    }
+
+    // Fallback: find the business post by post_author = wp_user_id
+    if (!empty($owner->wp_user_id)) {
+        $posts = get_posts([
+            'post_type'      => 'business',
+            'post_status'    => 'any',
+            'post_author'    => $owner->wp_user_id,
+            'posts_per_page' => 1,
+        ]);
+        if (!empty($posts)) {
+            return (int) $posts[0]->ID;
+        }
+    }
+
+    return 0;
+}
+function bod_create_billing_portal_session($owner_id) {
+    $owner = bod_get_owner($owner_id);
+    if (!$owner || empty($owner->stripe_customer_id)) return false;
+
+    if (!class_exists('\Stripe\Stripe')) bod_init_stripe();
+    \Stripe\Stripe::setApiKey(BOD_STRIPE_SECRET_KEY ?: get_option('bod_stripe_secret_key', ''));
+
+    try {
+        $session = \Stripe\BillingPortal\Session::create([
+            'customer'   => $owner->stripe_customer_id,
+            'return_url' => home_url('/business-owner-dashboard/?view=subscription'),
+        ]);
+        return $session->url;
+    } catch (\Throwable $e) {
+        error_log('[BOD Portal] Error: ' . $e->getMessage());
+        return false;
+    }
+}

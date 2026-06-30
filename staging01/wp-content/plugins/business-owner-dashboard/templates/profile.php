@@ -59,7 +59,13 @@ if (!empty($_POST['bod_change_password']) && check_admin_referer('bod_pwd_nonce'
     </div>
 
     <?php if ($save_msg) : ?><div class="alert alert-success"><?php echo esc_html($save_msg); ?></div><?php endif; ?>
-
+    <?php $pending_count = crs_has_pending_changes($business_id); ?>
+    <?php if ($pending_count) : ?>
+    <div class="alert alert-warning">
+        <i class="bi bi-clock-history"></i>
+        <strong><?php echo $pending_count; ?> change(s) pending approval</strong> — your live profile still shows the previous version.
+    </div>
+    <?php endif; ?>
     <div class="row g-4">
         <!-- Profile Form -->
         <div class="col-lg-8">
