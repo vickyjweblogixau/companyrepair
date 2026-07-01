@@ -536,6 +536,39 @@ class CRS_Subscriptions {
             error_log("[CRS Boost] Renewal error business #{$business_id}, boost {$boost_key}: " . $e->getMessage());
         }
     }
+    public static function activate_boost_subscription( $owner_id, $business_id, $plan_id, $amount, $stripe_pi = '' ) {
+    $owner = bod_get_owner( $owner_id );
+    if ( ! $owner ) return '';
+
+    $now          = current_time( 'mysql' );
+    $renewal_date = date( 'Y-m-d H:i:s', strtotime( '+30 days' ) );
+    $plan_title   = get_the_title( $plan_id );
+
+    $sub_id = wp_insert_post( [
+        'post_type'   => 'crs_sub',
+        'post_title'  => 'SUB-' . str_pad( $owner_id, 5, '0', STR_PAD_LEFT ) . '-' . date( 'Ymd' ) . '-BOOST',
+        'post_status' => 'sub_active',
+        'post_author' => (int) ( $owner->wp_user_id ?? 0 ),
+    ] );
+
+    if ( is_wp_error( $sub_id ) ) {
+        error_log( '[CRS Sub] Failed to create boost subscription post for owner #' . $owner_id );
+        return '';
+    }
+
+    update_post_meta( $sub_id, '_sub_owner_id',      $owner_id );
+    update_post_meta( $sub_id, '_sub_business_id',   $business_id );
+    update_post_meta( $sub_id, '_sub_plan',          sanitize_title( $plan_title ) );
+    update_post_meta( $sub_id, '_sub_plan_id',       $plan_id );
+    update_post_meta( $sub_id, '_sub_type',          'boost' );
+    update_post_meta( $sub_id, '_sub_charge_amount', $amount );
+    update_post_meta( $sub_id, '_sub_renewal_date',  $renewal_date );
+    update_post_meta( $sub_id, '_sub_started_at',    $now );
+    update_post_meta( $sub_id, '_sub_stripe_pi',     $stripe_pi );
+
+    error_log( "[CRS Sub] Boost subscription created: SUB post #{$sub_id} for owner #{$owner_id}, plan '{$plan_title}'." );
+    return $sub_id;
+}
 }
 
 CRS_Subscriptions::init();

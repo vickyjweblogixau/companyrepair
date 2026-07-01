@@ -205,7 +205,7 @@ if (!empty($_GET['cancel_boost'])) {
                                 <span class="text-muted small">Cancelled — won't auto-renew after expiry.</span>
                             <?php endif; ?>
                         <?php else : ?>
-                            <a href="<?php echo esc_url(home_url('/wp-json/business-owners-addons/v1/checkout?plan_id=' . $plan->ID)); ?>"
+                           <a href="<?php echo esc_url( add_query_arg( '_wpnonce', wp_create_nonce('wp_rest'), home_url('/wp-json/business-owners-addons/v1/checkout?plan_id=' . $plan->ID) ) ); ?>"
                             class="btn btn-primary w-100">
                                 Buy <?php echo esc_html($plan->post_title); ?> Boost
                             </a>

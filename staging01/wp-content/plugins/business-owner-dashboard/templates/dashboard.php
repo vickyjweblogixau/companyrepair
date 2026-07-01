@@ -34,11 +34,27 @@ $page_titles = [
 $page_title = $page_titles[$current_view] ?? 'Dashboard';
 
 // ── Flash Messages ─────────────────────────────────────────────────────────────
+// ── Flash Messages ─────────────────────────────────────────────────────────────
 $flash = '';
 if (!empty($_GET['listing_success'])) $flash = '<div class="alert alert-success">Listing credit added! You can now create a new listing.</div>';
 if (!empty($_GET['boost_success']))   $flash = '<div class="alert alert-success">Boost activated successfully!</div>';
 if (!empty($_GET['saved']))           $flash = '<div class="alert alert-success">Changes saved.</div>';
 
+// NEW — handle boost add-on checkout result
+if (!empty($_GET['addon_success'])) {
+    $flash = '<div class="alert alert-success">Boost purchased and activated successfully!</div>';
+}
+if (!empty($_GET['addon_error'])) {
+    $error_messages = [
+        'no_customer' => 'No payment account found on your profile. Please contact support.',
+        'no_card'     => 'No saved card found. Please add a payment method first.',
+        'failed'      => 'Payment failed. Please try again or use a different card.',
+        'exception'   => 'An unexpected error occurred. Please contact support if the issue persists.',
+    ];
+    $error_key = sanitize_key($_GET['addon_error']);
+    $msg = $error_messages[$error_key] ?? 'There was a problem activating your boost.';
+    $flash = '<div class="alert alert-danger">' . esc_html($msg) . '</div>';
+}
 // ── Sidebar Shell ─────────────────────────────────────────────────────────────
 include BOD_PLUGIN_DIR . 'templates/sidebar-business-owner.php';
 

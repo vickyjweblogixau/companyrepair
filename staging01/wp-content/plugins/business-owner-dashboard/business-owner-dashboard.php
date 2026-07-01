@@ -498,7 +498,7 @@ function bod_register_rest_routes() {
     register_rest_route('business-owners-addons/v1', '/checkout', [
         'methods'             => 'GET',
         'callback'            => 'bod_handle_addon_checkout',
-        'permission_callback' => 'is_user_logged_in',
+        'permission_callback' => '__return_true',
     ]);
 }
 
@@ -511,7 +511,6 @@ function bod_register_rest_routes() {
 function bod_handle_addon_checkout(WP_REST_Request $request) {
     $plan_id = (int) $request->get_param('plan_id');
     $owner   = bod_get_current_owner();
-
     if (!$owner) {
         wp_redirect(home_url('/business-owner-login/'));
         exit;
@@ -565,6 +564,7 @@ function bod_handle_addon_checkout(WP_REST_Request $request) {
 
             if (class_exists('CRS_Subscriptions')) {
                 $invoice_num = CRS_Subscriptions::generate_invoice_number($owner->id);
+                CRS_Subscriptions::activate_boost_subscription($owner->id, $business_id, $plan_id, $charge, $pi->id);
                 CRS_Subscriptions::create_order([
                     'owner_id'    => $owner->id,
                     'type'        => 'boost',
